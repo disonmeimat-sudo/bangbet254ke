@@ -1,0 +1,2889 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color: #17202a;
+  background: #f3f4f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================
+   APP
+========================= */
+
+.bb-app {
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding-bottom: 80px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.bb-header {
+  background: #ffd400;
+  color: #101010;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.bb-header-top {
+  min-height: 64px;
+  width: min(1250px, calc(100% - 28px));
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.bb-brand {
+  font-size: 25px;
+  font-weight: 1000;
+  letter-spacing: -1.4px;
+}
+
+.bb-brand span {
+  color: #e11d48;
+}
+
+.bb-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bb-search-button {
+  display: none;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+}
+
+.bb-account {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(255, 255, 255, 0.42);
+  padding: 7px 12px 7px 7px;
+  border-radius: 10px;
+}
+
+.bb-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #111827;
+  color: white;
+  display: grid;
+  place-items: center;
+}
+
+.bb-account-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.bb-account-info strong {
+  font-size: 12px;
+}
+
+.bb-account-info small {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.bb-login,
+.bb-join {
+  padding: 10px 17px;
+  border-radius: 7px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.bb-login {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.bb-join {
+  color: white;
+  background: #111827;
+}
+
+/* =========================
+   MAIN NAV
+========================= */
+
+.bb-main-nav {
+  width: min(1250px, calc(100% - 28px));
+  margin: auto;
+  min-height: 51px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bb-main-nav-item {
+  border: 0;
+  background: transparent;
+  padding: 13px 17px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.bb-main-nav-item.active {
+  background: #111827;
+  color: white;
+  border-radius: 7px 7px 0 0;
+}
+
+.bb-nav-search {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 270px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.bb-nav-search input {
+  border: 0;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 12px;
+}
+
+/* =========================
+   SPORTS
+========================= */
+
+.bb-sports-strip {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.bb-sports-scroll {
+  width: min(1250px, calc(100% - 28px));
+  margin: auto;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.bb-sports-scroll::-webkit-scrollbar,
+.bb-competition-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.sport-item {
+  min-width: 105px;
+  padding: 13px 10px;
+  border: 0;
+  border-right: 1px solid #edf0f2;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sport-icon {
+  font-size: 20px;
+}
+
+/* =========================
+   CONTENT
+========================= */
+
+.bb-content {
+  width: min(1250px, calc(100% - 28px));
+  margin: auto;
+}
+
+.bb-competition-scroll {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 15px 0;
+  scrollbar-width: none;
+}
+
+.bb-competition {
+  flex-shrink: 0;
+  border: 1px solid #dfe3e7;
+  background: white;
+  border-radius: 20px;
+  padding: 9px 15px;
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.bb-competition.active {
+  background: #111827;
+  border-color: #111827;
+  color: white;
+}
+
+/* =========================
+   PROMO
+========================= */
+
+.bb-promo {
+  border-radius: 13px;
+  min-height: 125px;
+  padding: 22px 26px;
+  margin-bottom: 22px;
+  background: #111827;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+}
+
+.bb-promo-small {
+  display: block;
+  color: #ffd400;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 7px;
+}
+
+.bb-promo strong {
+  display: block;
+  font-size: 24px;
+}
+
+.bb-promo p {
+  color: #cbd5e1;
+  margin: 7px 0 0;
+  font-size: 12px;
+}
+
+.bb-promo-ball {
+  font-size: 75px;
+  transform: rotate(-15deg);
+}
+
+/* =========================
+   SECTION
+========================= */
+
+.bb-section {
+  margin-bottom: 28px;
+}
+
+.bb-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.bb-section-kicker {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+}
+
+.bb-section-heading h2 {
+  margin: 3px 0 0;
+  font-size: 20px;
+  letter-spacing: -0.4px;
+}
+
+.bb-view-all {
+  color: #111827;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bb-live-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.bb-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+  display: inline-block;
+}
+
+.bb-live-dot.small {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+  margin-right: 5px;
+}
+
+/* =========================
+   MATCHES
+========================= */
+
+.bb-matches-grid,
+.bb-live-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bb-match-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  padding: 13px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.025);
+}
+
+.bb-match-card.is-live {
+  border-top: 3px solid #ef4444;
+}
+
+.bb-match-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 13px;
+}
+
+.bb-league {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.bb-match-time {
+  color: #111827;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.live-time {
+  color: #dc2626;
+}
+
+.bb-teams {
+  display: grid;
+  grid-template-columns: 1fr 45px 1fr;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 13px;
+}
+
+.bb-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bb-team.away {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.bb-team-logo {
+  flex-shrink: 0;
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bb-team strong {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bb-vs {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.bb-live-score {
+  margin-left: auto;
+  color: #dc2626;
+  font-size: 15px;
+}
+
+.bb-team.away .bb-live-score {
+  margin-left: 5px;
+}
+
+.bb-market-label {
+  display: flex;
+  gap: 7px;
+  color: #9ca3af;
+  font-size: 8px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.bb-market-label span:first-child {
+  color: #374151;
+}
+
+.bb-odds {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.bb-odds button {
+  min-height: 42px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-radius: 6px;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.bb-odds button:hover {
+  background: #fff4a8;
+  border-color: #ffd400;
+}
+
+.bb-odds small {
+  color: #6b7280;
+  font-size: 9px;
+}
+
+.bb-odds strong {
+  font-size: 12px;
+}
+
+.bb-odds .bb-more-odds {
+  background: #f1f5f9;
+  flex-direction: column;
+  gap: 0;
+}
+
+.bb-more-odds small {
+  font-size: 7px;
+}
+
+/* =========================
+   QUICK LINKS
+========================= */
+
+.bb-quick-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 35px 0;
+}
+
+.bb-quick-links a {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.bb-quick-links > a > span {
+  font-size: 23px;
+}
+
+.bb-quick-links strong,
+.bb-quick-links small {
+  display: block;
+}
+
+.bb-quick-links strong {
+  font-size: 12px;
+}
+
+.bb-quick-links small {
+  color: #6b7280;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+.bb-logout {
+  display: block;
+  margin: 20px auto;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  background: white;
+  border-radius: 8px;
+  padding: 10px 25px;
+  font-weight: 800;
+}
+
+/* =========================
+   BETSLIP
+========================= */
+
+.bb-betslip-floating {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 120;
+}
+
+/* =========================
+   BOTTOM NAV
+========================= */
+
+.bb-bottom-nav {
+  display: none;
+}
+
+/* =========================
+   LOADING
+========================= */
+
+.bb-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  background: #f3f4f6;
+  color: #111827;
+  font-weight: 800;
+}
+
+.bb-spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid #d1d5db;
+  border-top-color: #111827;
+  border-radius: 50%;
+  animation: bb-spin 0.8s linear infinite;
+}
+
+@keyframes bb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 800px) {
+  .bb-nav-search {
+    width: 200px;
+  }
+
+  .bb-matches-grid,
+  .bb-live-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+  .bb-app {
+    padding-bottom: 76px;
+  }
+
+  .bb-header {
+    position: relative;
+  }
+
+  .bb-header-top {
+    min-height: 57px;
+    width: calc(100% - 20px);
+  }
+
+  .bb-brand {
+    font-size: 21px;
+  }
+
+  .bb-search-button {
+    display: block;
+  }
+
+  .bb-account {
+    padding: 5px 8px 5px 5px;
+  }
+
+  .bb-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .bb-account-info strong {
+    max-width: 85px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bb-login {
+    padding: 8px;
+  }
+
+  .bb-join {
+    padding: 9px 12px;
+  }
+
+  .bb-main-nav {
+    width: 100%;
+    padding: 0 10px;
+    min-height: 45px;
+  }
+
+  .bb-main-nav-item {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .bb-nav-search {
+    display: none;
+  }
+
+  .bb-sports-scroll {
+    width: 100%;
+  }
+
+  .sport-item {
+    min-width: 82px;
+    font-size: 9px;
+    padding: 10px 5px;
+  }
+
+  .sport-icon {
+    font-size: 18px;
+  }
+
+  .bb-content {
+    width: calc(100% - 20px);
+  }
+
+  .bb-competition-scroll {
+    margin: 0 -10px;
+    padding: 11px 10px;
+  }
+
+  .bb-promo {
+    min-height: 105px;
+    padding: 17px;
+    border-radius: 9px;
+  }
+
+  .bb-promo strong {
+    font-size: 17px;
+    max-width: 230px;
+  }
+
+  .bb-promo p {
+    font-size: 9px;
+  }
+
+  .bb-promo-ball {
+    font-size: 50px;
+  }
+
+  .bb-section-heading h2 {
+    font-size: 17px;
+  }
+
+  .bb-match-card {
+    padding: 11px;
+  }
+
+  .bb-team strong {
+    font-size: 11px;
+  }
+
+  .bb-team-logo {
+    width: 26px;
+    height: 26px;
+  }
+
+  .bb-quick-links {
+    grid-template-columns: 1fr;
+  }
+
+  .bb-betslip-floating {
+    right: 50%;
+    transform: translateX(50%);
+    bottom: 69px;
+  }
+
+  .bb-bottom-nav {
+    position: fixed;
+    display: flex;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 62px;
+    background: #111827;
+    z-index: 110;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    justify-content: space-around;
+  }
+
+  .bb-bottom-item {
+    position: relative;
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: #9ca3af;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 16px;
+  }
+
+  .bb-bottom-item small {
+    font-size: 8px;
+    font-weight: 800;
+  }
+
+  .bb-bottom-item.active {
+    color: #ffd400;
+  }
+
+  .bb-bottom-item b {
+    position: absolute;
+    top: 5px;
+    right: calc(50% - 20px);
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    display: grid;
+    place-items: center;
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .bb-brand {
+    font-size: 18px;
+  }
+
+  .bb-account-info {
+    display: none;
+  }
+
+  .bb-header-actions {
+    gap: 4px;
+  }
+
+  .bb-match-card {
+    padding: 9px;
+  }
+
+  .bb-odds {
+    gap: 3px;
+  }
+
+  .bb-odds button {
+    min-height: 38px;
+  }
+
+  .bb-odds strong {
+    font-size: 10px;
+  }
+}
+
+/* =========================
+   BETSLIP PANEL
+========================= */
+
+.bb-betslip {
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.bb-betslip-header {
+  background: #111827;
+  color: white;
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bb-betslip-header > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bb-betslip-header strong {
+  color: #ffd400;
+  font-size: 12px;
+}
+
+.bb-betslip-header span {
+  font-size: 9px;
+  color: #cbd5e1;
+}
+
+.bb-betslip-header button {
+  border: 0;
+  background: transparent;
+  color: #fca5a5;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.bb-betslip-empty {
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.bb-betslip-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.bb-betslip-empty strong {
+  display: block;
+  font-size: 13px;
+}
+
+.bb-betslip-empty p {
+  margin: 7px 0 0;
+  color: #6b7280;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.bb-betslip-selections {
+  max-height: 230px;
+  overflow-y: auto;
+}
+
+.bb-bet-selection {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 20px;
+  gap: 8px;
+  align-items: center;
+  padding: 11px 13px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.bb-bet-selection-info {
+  min-width: 0;
+}
+
+.bb-bet-selection-info small,
+.bb-bet-selection-info strong {
+  display: block;
+}
+
+.bb-bet-selection-info small {
+  color: #6b7280;
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bb-bet-selection-info strong {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.bb-bet-odd {
+  color: #111827;
+  background: #fff4a8;
+  padding: 5px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+.bb-remove-bet {
+  border: 0;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+.bb-remove-bet:hover {
+  color: #ef4444;
+}
+
+.bb-betslip-summary {
+  padding: 13px;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.bb-betslip-summary > div,
+.bb-betslip-summary > label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bb-betslip-summary span {
+  color: #6b7280;
+  font-size: 10px;
+}
+
+.bb-betslip-summary strong {
+  font-size: 11px;
+}
+
+.bb-stake {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bb-stake span {
+  padding: 7px;
+  background: #f3f4f6;
+}
+
+.bb-stake input {
+  width: 75px;
+  border: 0;
+  outline: 0;
+  padding: 7px;
+  text-align: right;
+  font-size: 11px;
+}
+
+.bb-place-bet {
+  width: calc(100% - 26px);
+  margin: 0 13px 13px;
+  border: 0;
+  border-radius: 7px;
+  padding: 12px;
+  background: #ffd400;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.bb-place-bet:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .bb-betslip {
+    width: min(370px, calc(100vw - 20px));
+  }
+}
+
+/* =========================================================
+   MOBILE / RESPONSIVE BANGBET254
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  .bb-app {
+    width: 100%;
+    min-height: 100vh;
+    padding-bottom: 72px;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+
+  .bb-header {
+    position: sticky;
+    top: 0;
+  }
+
+  .bb-header-top {
+    width: 100%;
+    min-height: 58px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .bb-brand {
+    font-size: 20px;
+    letter-spacing: -1px;
+  }
+
+  .bb-header-actions {
+    gap: 6px;
+  }
+
+  .bb-login,
+  .bb-join {
+    padding: 8px 11px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+
+  .bb-account {
+    padding: 5px 8px 5px 5px;
+  }
+
+  .bb-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .bb-account-info strong {
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bb-account-info small {
+    font-size: 10px;
+  }
+
+  /* MAIN NAV */
+
+  .bb-main-nav {
+    width: 100%;
+    min-height: 45px;
+    padding: 0 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .bb-main-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bb-main-nav-item {
+    flex-shrink: 0;
+    padding: 10px 13px;
+    font-size: 11px;
+  }
+
+  .bb-nav-search {
+    flex-shrink: 0;
+    width: 180px;
+    margin-left: auto;
+    padding: 7px 9px;
+  }
+
+  .bb-nav-search input {
+    font-size: 11px;
+  }
+
+  /* SPORTS STRIP */
+
+  .bb-sports-scroll {
+    width: 100%;
+    padding-left: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sport-item {
+    min-width: 78px;
+    padding: 10px 7px;
+    font-size: 9px;
+  }
+
+  .sport-icon {
+    font-size: 18px;
+  }
+
+  /* CONTENT */
+
+  .bb-content {
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .bb-competition-scroll {
+    width: 100%;
+    padding: 11px 0;
+    overflow-x: auto;
+  }
+
+  .bb-competition {
+    padding: 8px 12px;
+    font-size: 10px;
+  }
+
+  /* PROMO */
+
+  .bb-promo {
+    min-height: 105px;
+    padding: 17px;
+    margin-bottom: 17px;
+    border-radius: 10px;
+  }
+
+  .bb-promo-small {
+    font-size: 8px;
+  }
+
+  .bb-promo strong {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .bb-promo p {
+    font-size: 10px;
+    margin-top: 5px;
+  }
+
+  .bb-promo-ball {
+    font-size: 52px;
+  }
+
+  /* SECTIONS */
+
+  .bb-section {
+    margin-bottom: 21px;
+  }
+
+  .bb-section-heading {
+    margin-bottom: 9px;
+  }
+
+  .bb-section-heading h2 {
+    font-size: 17px;
+  }
+
+  .bb-section-kicker {
+    font-size: 8px;
+  }
+
+  .bb-view-all {
+    font-size: 10px;
+  }
+
+  /* MATCH CARDS */
+
+  .bb-matches-grid,
+  .bb-live-grid {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .bb-match-card {
+    padding: 11px;
+    border-radius: 9px;
+  }
+
+  .bb-match-card-top {
+    margin-bottom: 10px;
+  }
+
+  .bb-league {
+    font-size: 8px;
+  }
+
+  .bb-match-time {
+    font-size: 9px;
+  }
+
+  .bb-teams {
+    grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+    margin-bottom: 10px;
+  }
+
+  .bb-team {
+    gap: 6px;
+  }
+
+  .bb-team-logo {
+    width: 27px;
+    height: 27px;
+    font-size: 10px;
+  }
+
+  .bb-team strong {
+    font-size: 11px;
+  }
+
+  .bb-odds {
+    gap: 4px;
+  }
+
+  .bb-odds button {
+    min-height: 38px;
+    font-size: 10px;
+  }
+
+  /* QUICK LINKS */
+
+  .bb-quick-links {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    margin-bottom: 20px;
+  }
+
+  .bb-quick-links a {
+    min-height: 58px;
+    padding: 10px 12px;
+  }
+
+  .bb-quick-links a > span {
+    font-size: 21px;
+  }
+
+  .bb-quick-links strong {
+    font-size: 12px;
+  }
+
+  .bb-quick-links small {
+    font-size: 9px;
+  }
+
+  /* BET SLIP */
+
+  .bb-betslip-floating {
+    max-width: calc(100vw - 20px);
+  }
+
+  /* MOBILE BOTTOM NAV */
+
+  .bb-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 64px;
+    z-index: 999;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    background: #111827;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 -4px 18px rgba(0,0,0,0.15);
+  }
+
+  .bb-bottom-item {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 17px;
+  }
+
+  .bb-bottom-item small {
+    font-size: 8px;
+    font-weight: 800;
+  }
+
+  .bb-bottom-item.active {
+    color: #ffd400;
+  }
+
+  .bb-bottom-item b {
+    position: absolute;
+    top: 7px;
+    right: calc(50% - 20px);
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    border-radius: 99px;
+    background: #ef4444;
+    color: white;
+    font-size: 8px;
+    display: grid;
+    place-items: center;
+  }
+
+  /* LOGOUT */
+
+  .bb-logout {
+    width: 100%;
+    margin: 10px 0 15px;
+  }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 400px) {
+
+  .bb-header-top {
+    padding: 0 8px;
+  }
+
+  .bb-brand {
+    font-size: 18px;
+  }
+
+  .bb-login,
+  .bb-join {
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+
+  .bb-content {
+    padding: 0 8px;
+  }
+
+  .bb-promo {
+    padding: 14px;
+  }
+
+  .bb-promo strong {
+    font-size: 16px;
+  }
+
+  .bb-promo-ball {
+    font-size: 42px;
+  }
+
+  .bb-team strong {
+    font-size: 10px;
+  }
+
+  .bb-odds button {
+    min-height: 36px;
+    font-size: 9px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 769px) and (max-width: 1100px) {
+
+  .bb-header-top,
+  .bb-main-nav,
+  .bb-sports-scroll,
+  .bb-content {
+    width: min(100% - 24px, 1000px);
+  }
+
+  .bb-matches-grid,
+  .bb-live-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+/* =========================================================
+   BANGBET254 USER DASHBOARD
+========================================================= */
+
+.bb-dashboard-page {
+  padding-top: 28px;
+  padding-bottom: 110px;
+}
+
+.bb-page-title {
+  margin-bottom: 24px;
+}
+
+.bb-page-title h1 {
+  margin: 5px 0;
+  font-size: 28px;
+  font-weight: 950;
+  color: #111827;
+}
+
+.bb-page-title p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* BETSLIP PAGE */
+
+.bb-dashboard-betslip {
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.bb-dashboard-betslip .bb-betslip {
+  position: static;
+  width: 100%;
+}
+
+/* MY BETS */
+
+.bb-my-bets-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.bb-my-bets-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid #edf0f2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bb-my-bets-header strong {
+  font-size: 14px;
+}
+
+.bb-my-bets-header span {
+  background: #111827;
+  color: white;
+  min-width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bb-selection-list {
+  padding: 5px 18px;
+}
+
+.bb-history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.bb-history-row:last-child {
+  border-bottom: none;
+}
+
+.bb-history-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bb-history-row strong {
+  font-size: 13px;
+}
+
+.bb-history-row small {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.bb-history-row > strong {
+  background: #fff7cc;
+  padding: 7px 10px;
+  border-radius: 7px;
+}
+
+.bb-empty-history {
+  padding: 35px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.bb-empty-history > div {
+  font-size: 35px;
+  margin-bottom: 8px;
+}
+
+.bb-empty-history strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+}
+
+.bb-empty-history p {
+  font-size: 12px;
+  margin: 7px 0 15px;
+}
+
+.bb-empty-history button {
+  border: none;
+  background: #111827;
+  color: white;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* PROFILE */
+
+.bb-profile-hero {
+  background: linear-gradient(135deg, #111827, #1f2937);
+  color: white;
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.bb-profile-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #ffd400;
+  color: #111827;
+  display: grid;
+  place-items: center;
+  font-size: 25px;
+}
+
+.bb-profile-hero span {
+  color: #ffd400;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bb-profile-hero h1 {
+  margin: 3px 0;
+  font-size: 21px;
+}
+
+.bb-profile-hero small {
+  color: #cbd5e1;
+}
+
+.bb-balance-card {
+  background: #ffd400;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.bb-balance-card > span {
+  display: block;
+  color: #374151;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.bb-balance-card > strong {
+  display: block;
+  color: #111827;
+  font-size: 28px;
+  margin: 5px 0 18px;
+}
+
+.bb-wallet-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.bb-wallet-actions button {
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255,255,255,.7);
+  padding: 10px 5px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.bb-account-menu {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.bb-account-menu button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #edf0f2;
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  text-align: left;
+  padding: 16px;
+}
+
+.bb-account-menu button:last-child {
+  border-bottom: 0;
+}
+
+.bb-account-menu button > span {
+  width: 35px;
+  height: 35px;
+  border-radius: 9px;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+}
+
+.bb-account-menu button div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bb-account-menu strong {
+  font-size: 13px;
+  color: #111827;
+}
+
+.bb-account-menu small {
+  color: #6b7280;
+  font-size: 10px;
+}
+
+.bb-account-menu b {
+  color: #9ca3af;
+  font-size: 20px;
+}
+
+/* =========================================================
+   MOBILE BOTTOM NAV
+========================================================= */
+
+.bb-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 67px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  z-index: 9999;
+  box-shadow: 0 -4px 18px rgba(0,0,0,.08);
+}
+
+.bb-bottom-item {
+  position: relative;
+  flex: 1;
+  max-width: 130px;
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.bb-bottom-item span {
+  font-size: 19px;
+  line-height: 20px;
+}
+
+.bb-bottom-item small {
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.bb-bottom-item.active {
+  color: #e11d48;
+}
+
+.bb-bottom-item.active span {
+  transform: translateY(-1px);
+}
+
+.bb-bottom-item b {
+  position: absolute;
+  top: 7px;
+  margin-left: 25px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 20px;
+  background: #e11d48;
+  color: white;
+  font-size: 9px;
+  display: grid;
+  place-items: center;
+}
+
+/* DESKTOP */
+
+@media (min-width: 801px) {
+  .bb-bottom-nav {
+    display: none;
+  }
+}
+
+/* TABLET */
+
+@media (max-width: 800px) {
+  .bb-app {
+    padding-bottom: 75px;
+  }
+
+  .bb-betslip-floating {
+    display: none;
+  }
+
+  .bb-header {
+    position: sticky;
+  }
+
+  .bb-header-top {
+    width: calc(100% - 20px);
+    min-height: 57px;
+  }
+
+  .bb-brand {
+    font-size: 21px;
+  }
+
+  .bb-account-info {
+    display: none;
+  }
+
+  .bb-account {
+    background: transparent;
+    padding: 3px;
+  }
+
+  .bb-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .bb-main-nav {
+    width: 100%;
+    padding: 0 10px;
+    min-height: 44px;
+  }
+
+  .bb-main-nav-item {
+    padding: 10px 13px;
+    font-size: 11px;
+  }
+
+  .bb-nav-search {
+    width: auto;
+    flex: 1;
+    margin-left: 4px;
+  }
+
+  .bb-content {
+    width: calc(100% - 20px);
+  }
+
+  .bb-promo {
+    min-height: 105px;
+    padding: 18px;
+  }
+
+  .bb-promo strong {
+    font-size: 18px;
+  }
+
+  .bb-promo p {
+    font-size: 10px;
+  }
+
+  .bb-promo-ball {
+    font-size: 50px;
+  }
+
+  .bb-matches-grid,
+  .bb-live-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* PHONE */
+
+@media (max-width: 480px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .bb-content {
+    width: calc(100% - 16px);
+  }
+
+  .bb-sports-scroll {
+    width: 100%;
+  }
+
+  .sport-item {
+    min-width: 78px;
+    padding: 10px 7px;
+    font-size: 9px;
+  }
+
+  .sport-icon {
+    font-size: 18px;
+  }
+
+  .bb-competition-scroll {
+    padding: 10px 0;
+  }
+
+  .bb-competition {
+    padding: 8px 12px;
+    font-size: 10px;
+  }
+
+  .bb-promo {
+    margin-bottom: 18px;
+    min-height: 100px;
+    padding: 15px;
+  }
+
+  .bb-promo strong {
+    font-size: 16px;
+  }
+
+  .bb-promo-ball {
+    font-size: 42px;
+  }
+
+  .bb-section {
+    margin-bottom: 22px;
+  }
+
+  .bb-section-heading h2 {
+    font-size: 17px;
+  }
+
+  .bb-match-card {
+    padding: 11px;
+  }
+
+  .bb-page-title h1 {
+    font-size: 23px;
+  }
+
+  .bb-profile-hero {
+    padding: 18px;
+  }
+
+  .bb-profile-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .bb-balance-card > strong {
+    font-size: 24px;
+  }
+
+  .bb-wallet-actions button {
+    font-size: 9px;
+    padding: 9px 3px;
+  }
+}
+
+
+
+/* =========================================================
+   BANGBET254 FINAL MOBILE NAVIGATION
+   ========================================================= */
+
+.bb-betslip-mobile-open {
+  display: block !important;
+}
+
+@media (min-width: 801px) {
+  .bb-bottom-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 800px) {
+
+  .bb-app {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .bb-bottom-nav {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    width: 100% !important;
+    height: 68px !important;
+
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: space-around !important;
+
+    background: #ffffff !important;
+    border-top: 1px solid #e5e7eb !important;
+
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.12) !important;
+
+    z-index: 99999 !important;
+
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bb-bottom-item {
+    position: relative !important;
+
+    flex: 1 1 20% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    border: 0 !important;
+    outline: none !important;
+
+    background: transparent !important;
+
+    color: #6b7280 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 3px !important;
+
+    font-size: 19px !important;
+
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bb-bottom-item span {
+    display: block;
+    font-size: 20px !important;
+    line-height: 22px !important;
+  }
+
+  .bb-bottom-item small {
+    display: block;
+    font-size: 9px !important;
+    line-height: 12px !important;
+    font-weight: 800 !important;
+  }
+
+  .bb-bottom-item.active {
+    color: #e11d48 !important;
+  }
+
+  .bb-bottom-item:active {
+    transform: scale(0.94);
+  }
+
+  .bb-bottom-item b {
+    position: absolute !important;
+
+    top: 7px !important;
+    left: 50% !important;
+
+    transform: translateX(10px) !important;
+
+    min-width: 17px !important;
+    height: 17px !important;
+
+    padding: 0 4px !important;
+
+    border-radius: 20px !important;
+
+    background: #e11d48 !important;
+    color: white !important;
+
+    font-size: 9px !important;
+
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  /*
+     MOBILE BETSLIP
+  */
+
+  .bb-betslip-floating {
+    position: fixed !important;
+
+    left: 10px !important;
+    right: 10px !important;
+
+    bottom: 76px !important;
+
+    width: auto !important;
+    max-width: none !important;
+
+    transform: none !important;
+
+    z-index: 99998 !important;
+
+    display: none;
+  }
+
+  .bb-betslip-floating.bb-betslip-mobile-open {
+    display: block !important;
+  }
+
+  .bb-betslip {
+    width: 100% !important;
+    max-height: calc(100vh - 150px) !important;
+    overflow-y: auto !important;
+
+    border-radius: 16px !important;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  /*
+     MOBILE CONTENT
+  */
+
+  .bb-content {
+    width: calc(100% - 20px) !important;
+    margin: 0 auto !important;
+  }
+
+  .bb-matches-grid,
+  .bb-live-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bb-match-card {
+    border-radius: 12px !important;
+  }
+
+  .bb-promo {
+    border-radius: 14px !important;
+  }
+
+  /*
+     MOBILE HEADER
+  */
+
+  .bb-header-top {
+    width: calc(100% - 20px) !important;
+  }
+
+  .bb-main-nav {
+    width: 100% !important;
+    padding: 0 10px !important;
+  }
+
+  .bb-nav-search {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+}
+
+
+/* =========================================================
+   USER PAGES
+   ========================================================= */
+
+.bb-user-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding: 24px;
+  padding-bottom: 100px;
+}
+
+.bb-user-page-header {
+  width: min(900px, 100%);
+  margin: 0 auto 20px;
+}
+
+.bb-user-page-header h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #111827;
+}
+
+.bb-user-page-header p {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.bb-user-card {
+  width: min(900px, 100%);
+  margin: 0 auto 18px;
+
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+
+  padding: 18px;
+
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+}
+
+.bb-user-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eef0f2;
+}
+
+.bb-user-card-title span {
+  display: block;
+  color: #9ca3af;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.bb-user-card-title h2 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.bb-user-card-title > strong {
+  min-width: 32px;
+  height: 32px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #111827;
+  color: white;
+
+  font-size: 12px;
+}
+
+.bb-empty-user-state {
+  text-align: center;
+  padding: 35px 15px;
+}
+
+.bb-empty-user-state.compact {
+  padding: 25px 15px;
+}
+
+.bb-empty-user-state > div {
+  font-size: 35px;
+  margin-bottom: 10px;
+}
+
+.bb-empty-user-state strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+}
+
+.bb-empty-user-state p {
+  color: #9ca3af;
+  font-size: 11px;
+  margin: 6px 0 0;
+}
+
+.bb-my-selections {
+  display: flex;
+  flex-direction: column;
+}
+
+.bb-my-selection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 13px 0;
+
+  border-bottom: 1px solid #f0f1f2;
+}
+
+.bb-my-selection small {
+  display: block;
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.bb-my-selection strong {
+  display: block;
+  margin-top: 3px;
+  color: #111827;
+  font-size: 12px;
+}
+
+.bb-my-selection > span {
+  padding: 7px 11px;
+  border-radius: 7px;
+  background: #fff7cc;
+  color: #111827;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.bb-my-bets-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding-top: 14px;
+
+  font-size: 12px;
+}
+
+.bb-my-bets-total strong {
+  font-size: 16px;
+}
+
+.bb-history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.bb-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 0;
+
+  border-bottom: 1px solid #f0f1f2;
+}
+
+.bb-history-item > div:last-child {
+  text-align: right;
+}
+
+.bb-history-item strong {
+  display: block;
+  color: #111827;
+  font-size: 12px;
+}
+
+.bb-history-item small {
+  display: block;
+  color: #9ca3af;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+
+@media (max-width: 600px) {
+
+  .bb-user-page {
+    padding: 15px 10px 90px;
+  }
+
+  .bb-user-page-header {
+    padding: 4px 5px;
+  }
+
+  .bb-user-page-header h1 {
+    font-size: 22px;
+  }
+
+  .bb-user-card {
+    border-radius: 13px;
+    padding: 15px;
+  }
+
+  .bb-user-card-title h2 {
+    font-size: 16px;
+  }
+
+  .bb-history-item {
+    gap: 10px;
+  }
+}
+
+/* =========================================================
+   FINAL BOTTOM NAV FIX
+   ========================================================= */
+
+.bb-bottom-nav {
+  box-sizing: border-box !important;
+}
+
+.bb-bottom-item {
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+}
+
+/* DESKTOP: hide bottom navigation */
+@media (min-width: 801px) {
+  .bb-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* MOBILE + TABLET: SHOW BOTTOM NAV */
+@media (max-width: 800px) {
+
+  .bb-app {
+    min-height: 100vh !important;
+    padding-bottom: 85px !important;
+  }
+
+  .bb-bottom-nav {
+    position: fixed !important;
+    display: flex !important;
+
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    width: 100vw !important;
+    height: 70px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #111827 !important;
+
+    border: 0 !important;
+    border-top: 2px solid #374151 !important;
+
+    box-shadow: 0 -5px 20px rgba(0,0,0,.25) !important;
+
+    z-index: 2147483647 !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    align-items: stretch !important;
+    justify-content: space-around !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item {
+    position: relative !important;
+
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    flex: 1 1 20% !important;
+    width: 20% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    height: 70px !important;
+
+    margin: 0 !important;
+    padding: 8px 2px !important;
+
+    border: 0 !important;
+    outline: none !important;
+
+    background: transparent !important;
+
+    color: #9ca3af !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex-direction: column !important;
+    gap: 4px !important;
+
+    font-family: inherit !important;
+    font-size: 20px !important;
+
+    cursor: pointer !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item span {
+    display: block !important;
+
+    width: auto !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    font-size: 21px !important;
+    line-height: 23px !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item small {
+    display: block !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: inherit !important;
+
+    font-size: 9px !important;
+    line-height: 12px !important;
+
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item.active {
+    color: #ffd400 !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item.active span {
+    transform: translateY(-1px) !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item:active {
+    transform: scale(.94) !important;
+  }
+
+  /* BETSLIP ON MOBILE */
+  .bb-betslip-floating {
+    display: none !important;
+  }
+
+  .bb-betslip-floating.bb-betslip-mobile-open {
+    display: block !important;
+
+    position: fixed !important;
+
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 78px !important;
+
+    width: auto !important;
+    max-width: none !important;
+
+    z-index: 2147483646 !important;
+  }
+
+  /* BADGE */
+  .bb-bottom-nav .bb-bottom-item b {
+    position: absolute !important;
+
+    top: 5px !important;
+    left: 50% !important;
+
+    transform: translateX(10px) !important;
+
+    min-width: 17px !important;
+    height: 17px !important;
+
+    padding: 0 4px !important;
+
+    border-radius: 50% !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    background: #ef4444 !important;
+    color: #ffffff !important;
+
+    font-size: 9px !important;
+    line-height: 17px !important;
+    font-weight: 900 !important;
+  }
+}
+
+/* SMALL PHONES */
+@media (max-width: 380px) {
+
+  .bb-bottom-nav {
+    height: 64px !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item {
+    height: 64px !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item span {
+    font-size: 19px !important;
+  }
+
+  .bb-bottom-nav .bb-bottom-item small {
+    font-size: 8px !important;
+  }
+}
+
+
+/* =========================================================
+   BANGBET254 - DEFINITIVE MOBILE BOTTOM NAV
+   ========================================================= */
+
+@media screen and (max-width: 800px) {
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  .bb-app {
+    width: 100%;
+    min-height: 100vh;
+    padding-bottom: 90px !important;
+  }
+
+  nav.bb-bottom-nav {
+    display: flex !important;
+
+    position: fixed !important;
+
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    width: 100% !important;
+    height: 72px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #111827 !important;
+
+    border-top: 3px solid #ffd400 !important;
+
+    box-shadow: 0 -8px 25px rgba(0,0,0,.35) !important;
+
+    z-index: 2147483647 !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    overflow: visible !important;
+
+    flex-direction: row !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
+  }
+
+  nav.bb-bottom-nav > button.bb-bottom-item {
+    display: flex !important;
+
+    position: relative !important;
+
+    flex: 1 1 20% !important;
+
+    width: 20% !important;
+    max-width: 20% !important;
+    min-width: 0 !important;
+
+    height: 72px !important;
+
+    margin: 0 !important;
+    padding: 7px 2px !important;
+
+    background: transparent !important;
+
+    border: 0 !important;
+
+    color: #9ca3af !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex-direction: column !important;
+
+    gap: 3px !important;
+
+    font-family: Arial, sans-serif !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  nav.bb-bottom-nav > button.bb-bottom-item span {
+    display: block !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    font-size: 22px !important;
+
+    line-height: 25px !important;
+
+    height: 25px !important;
+  }
+
+  nav.bb-bottom-nav > button.bb-bottom-item small {
+    display: block !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    color: inherit !important;
+
+    font-size: 10px !important;
+
+    line-height: 14px !important;
+
+    font-weight: 900 !important;
+
+    white-space: nowrap !important;
+  }
+
+  nav.bb-bottom-nav > button.bb-bottom-item.active {
+    color: #ffd400 !important;
+  }
+
+  nav.bb-bottom-nav > button.bb-bottom-item.active small {
+    color: #ffd400 !important;
+  }
+
+  nav.bb-bottom-nav > button.bb-bottom-item b {
+    display: grid !important;
+
+    position: absolute !important;
+
+    top: 5px !important;
+    left: 50% !important;
+
+    transform: translateX(10px) !important;
+
+    min-width: 17px !important;
+    height: 17px !important;
+
+    padding: 0 3px !important;
+
+    border-radius: 50% !important;
+
+    background: #ef4444 !important;
+
+    color: white !important;
+
+    font-size: 9px !important;
+
+    place-items: center !important;
+  }
+}
+
+
+/* =========================================================
+   HIDE NAV ONLY ON REAL DESKTOP
+   ========================================================= */
+
+@media screen and (min-width: 801px) {
+
+  nav.bb-bottom-nav {
+    display: none !important;
+  }
+
+}
+
+/* =========================================================
+   BANGBET254 - BET HISTORY
+   ========================================================= */
+
+.bb-bet-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bb-bet-history-card {
+  border: 1px solid #eef0f2;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+}
+
+.bb-bet-history-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid #f0f1f2;
+}
+
+.bb-bet-history-top strong {
+  display: block;
+  color: #111827;
+  font-size: 12px;
+}
+
+.bb-bet-history-top small {
+  display: block;
+  color: #9ca3af;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+.bb-bet-status {
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #fff7cc;
+  color: #7a5d00;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bb-bet-history-selections {
+  display: flex;
+  flex-direction: column;
+}
+
+.bb-bet-history-selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+.bb-bet-history-selection > div {
+  min-width: 0;
+}
+
+.bb-bet-history-selection strong {
+  display: block;
+  color: #111827;
+  font-size: 11px;
+}
+
+.bb-bet-history-selection small {
+  display: block;
+  margin-top: 3px;
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.bb-bet-history-selection > strong {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #fff7cc;
+  color: #111827;
+}
+
+.bb-bet-history-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.bb-bet-history-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bb-bet-history-summary span {
+  color: #9ca3af;
+  font-size: 9px;
+}
+
+.bb-bet-history-summary strong {
+  color: #111827;
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .bb-bet-history-card {
+    padding: 12px;
+  }
+
+  .bb-bet-history-summary {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .bb-bet-history-summary div {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bb-bet-history-selection strong {
+    font-size: 10px;
+  }
+}
