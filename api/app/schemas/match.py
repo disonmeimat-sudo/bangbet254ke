@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MatchCreate(BaseModel):
@@ -8,6 +8,10 @@ class MatchCreate(BaseModel):
     home_team_id: int
     away_team_id: int
     scheduled_at: datetime
+
+    home_odds: float = Field(gt=1)
+    draw_odds: float = Field(gt=1)
+    away_odds: float = Field(gt=1)
 
 
 class MatchScoreUpdate(BaseModel):

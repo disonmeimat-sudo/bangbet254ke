@@ -8,6 +8,8 @@ from app.core.database import get_db
 from app.models.league import League
 from app.models.match import Match
 from app.models.team import Team
+from app.models.market import Market
+from app.models.odd import Odd
 from app.models.user import User
 from app.schemas.match import (
     MatchBettingUpdate,
@@ -72,6 +74,41 @@ def create_match(
     )
 
     db.add(match)
+    db.flush()
+
+    # Create the standard 1X2 / Match Winner market.
+    market = Market(
+        match_id=match.id,
+        name="Match Winner",
+        market_type="1x2",
+        is_active=True,
+    )
+
+    db.add(market)
+    db.flush()
+
+    # Create Home / Draw / Away odds.
+    db.add_all([
+        Odd(
+            market_id=market.id,
+            name=home_team.name,
+            value=data.home_odds,
+            is_active=True,
+        ),
+        Odd(
+            market_id=market.id,
+            name="Draw",
+            value=data.draw_odds,
+            is_active=True,
+        ),
+        Odd(
+            market_id=market.id,
+            name=away_team.name,
+            value=data.away_odds,
+            is_active=True,
+        ),
+    ])
+
     db.commit()
     db.refresh(match)
 

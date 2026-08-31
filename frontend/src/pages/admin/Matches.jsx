@@ -60,6 +60,9 @@ export default function Matches() {
     league_id: "",
     home_team_id: "",
     away_team_id: "",
+    home_odds: "1.50",
+    draw_odds: "3.20",
+    away_odds: "4.50",
     scheduled_at: "",
   });
 
@@ -132,6 +135,9 @@ export default function Matches() {
       !form.league_id ||
       !form.home_team_id ||
       !form.away_team_id ||
+      !form.home_odds ||
+      !form.draw_odds ||
+      !form.away_odds ||
       !form.scheduled_at
     ) {
       setError("Please complete every match field.");
@@ -150,6 +156,9 @@ export default function Matches() {
         league_id: Number(form.league_id),
         home_team_id: Number(form.home_team_id),
         away_team_id: Number(form.away_team_id),
+        home_odds: Number(form.home_odds),
+        draw_odds: Number(form.draw_odds),
+        away_odds: Number(form.away_odds),
         scheduled_at: new Date(
           form.scheduled_at
         ).toISOString(),
@@ -159,6 +168,9 @@ export default function Matches() {
         league_id: "",
         home_team_id: "",
         away_team_id: "",
+        home_odds: "1.50",
+        draw_odds: "3.20",
+        away_odds: "4.50",
         scheduled_at: "",
       });
 
@@ -365,6 +377,75 @@ export default function Matches() {
                   </option>
                 ))}
               </select>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontWeight: 800,
+                  }}
+                >
+                  Home Odds
+                </label>
+
+                <input
+                  type="number"
+                  name="home_odds"
+                  value={form.home_odds}
+                  onChange={handleChange}
+                  min="1.01"
+                  step="0.01"
+                  placeholder="1.50"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontWeight: 800,
+                  }}
+                >
+                  Draw Odds
+                </label>
+
+                <input
+                  type="number"
+                  name="draw_odds"
+                  value={form.draw_odds}
+                  onChange={handleChange}
+                  min="1.01"
+                  step="0.01"
+                  placeholder="3.20"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "6px",
+                    fontWeight: 800,
+                  }}
+                >
+                  Away Odds
+                </label>
+
+                <input
+                  type="number"
+                  name="away_odds"
+                  value={form.away_odds}
+                  onChange={handleChange}
+                  min="1.01"
+                  step="0.01"
+                  placeholder="4.50"
+                  style={inputStyle}
+                />
+              </div>
 
               <input
                 type="datetime-local"
