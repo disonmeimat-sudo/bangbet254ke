@@ -3,14 +3,29 @@ import { useBetSlip } from "../../context/BetSlipContext";
 export default function MatchCard({ match, live = false }) {
   const betSlip = useBetSlip();
 
+  const leagueName =
+    typeof match.league === "object"
+      ? match.league?.name
+      : match.league;
+
+  const homeTeamName =
+    typeof match.home_team === "object"
+      ? match.home_team?.name
+      : match.home_team;
+
+  const awayTeamName =
+    typeof match.away_team === "object"
+      ? match.away_team?.name
+      : match.away_team;
+
   function addBet(type, odd) {
     const selection = {
       match_id: match.id,
       market: type,
       selection: type,
       odds: Number(odd),
-      home_team: match.home_team,
-      away_team: match.away_team,
+      home_team: homeTeamName,
+      away_team: awayTeamName,
     };
 
     if (typeof betSlip?.addSelection === "function") {
@@ -28,10 +43,14 @@ export default function MatchCard({ match, live = false }) {
       <div className="bb-match-card-top">
         <span className="bb-league">
           {live && <i className="bb-live-dot small" />}
-          {match.league}
+          {leagueName || "Football"}
         </span>
 
-        <span className={live ? "bb-match-time live-time" : "bb-match-time"}>
+        <span
+          className={
+            live ? "bb-match-time live-time" : "bb-match-time"
+          }
+        >
           {match.time}
         </span>
       </div>
@@ -39,10 +58,10 @@ export default function MatchCard({ match, live = false }) {
       <div className="bb-teams">
         <div className="bb-team">
           <div className="bb-team-logo">
-            {match.home_team?.charAt(0)}
+            {homeTeamName?.charAt(0) || "H"}
           </div>
 
-          <strong>{match.home_team}</strong>
+          <strong>{homeTeamName || "Home"}</strong>
 
           {live && (
             <b className="bb-live-score">
@@ -57,10 +76,10 @@ export default function MatchCard({ match, live = false }) {
 
         <div className="bb-team away">
           <div className="bb-team-logo">
-            {match.away_team?.charAt(0)}
+            {awayTeamName?.charAt(0) || "A"}
           </div>
 
-          <strong>{match.away_team}</strong>
+          <strong>{awayTeamName || "Away"}</strong>
 
           {live && (
             <b className="bb-live-score">
