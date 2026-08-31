@@ -1,10 +1,11 @@
 import sys
 from pathlib import Path
 
+# The FastAPI application package lives directly inside /api.
 API_DIR = Path(__file__).resolve().parent
 
-if str(API_DIR) not in sys.path:
-    sys.path.insert(0, str(API_DIR))
+# Ensure /api is the first import location.
+sys.path.insert(0, str(API_DIR))
 
 from app.main import app
 
