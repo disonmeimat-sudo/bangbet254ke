@@ -1,6 +1,10 @@
-import client from "./client";
+import api from "./client";
 
-export async function getPublicMatches() {
-  const response = await client.get("/api/public/matches");
+export async function getPublicMatches(params = {}) {
+  const response = await api.get(
+    "/api/public/matches",
+    { params }
+  );
+
   return response.data;
 }
