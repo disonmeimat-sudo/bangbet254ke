@@ -24,4 +24,3 @@ frontend/dist/
 .vercel
 .env*
 
-api/app/
