@@ -82,3 +82,11 @@ def health():
         "status": "healthy",
         "service": "bangbet254-api",
     }
+
+
+@app.get("/api/health")
+def api_health():
+    return {
+        "status": "healthy",
+        "service": "bangbet254-api",
+    }
