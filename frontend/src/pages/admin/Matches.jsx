@@ -1,6 +1,56 @@
 import { useEffect, useState } from "react";
 import api from "../../api/client";
 
+function formatDate(value) {
+  if (!value) return "-";
+
+  return new Date(value).toLocaleString("en-KE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function StatusBadge({ children, type = "default" }) {
+  const styles = {
+    default: {
+      background: "#e5e7eb",
+      color: "#374151",
+    },
+    live: {
+      background: "#dcfce7",
+      color: "#166534",
+    },
+    featured: {
+      background: "#fef3c7",
+      color: "#92400e",
+    },
+    open: {
+      background: "#dbeafe",
+      color: "#1d4ed8",
+    },
+    closed: {
+      background: "#fee2e2",
+      color: "#991b1b",
+    },
+  };
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "6px 10px",
+        borderRadius: "999px",
+        fontSize: "12px",
+        fontWeight: 800,
+        ...styles[type],
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
 export default function Matches() {
   const [matches, setMatches] = useState([]);
   const [leagues, setLeagues] = useState([]);
@@ -15,14 +65,20 @@ export default function Matches() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [actionId, setActionId] = useState(null);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
 
-      const [matchesRes, leaguesRes, teamsRes] = await Promise.all([
+      const [
+        matchesRes,
+        leaguesRes,
+        teamsRes,
+      ] = await Promise.all([
         api.get("/api/admin/matches"),
         api.get("/api/admin/leagues"),
         api.get("/api/admin/teams"),
@@ -46,18 +102,31 @@ export default function Matches() {
   }, []);
 
   function teamName(id) {
-    const team = teams.find((t) => t.id === id);
-    return team?.name || `Team #${id}`;
+    return (
+      teams.find((team) => team.id === id)?.name ||
+      `Team #${id}`
+    );
   }
 
   function leagueName(id) {
-    const league = leagues.find((l) => l.id === id);
-    return league?.name || `League #${id}`;
+    return (
+      leagues.find((league) => league.id === id)?.name ||
+      `League #${id}`
+    );
+  }
+
+  function handleChange(e) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   }
 
   async function createMatch(e) {
     e.preventDefault();
+
     setError("");
+    setMessage("");
 
     if (
       !form.league_id ||
@@ -65,7 +134,7 @@ export default function Matches() {
       !form.away_team_id ||
       !form.scheduled_at
     ) {
-      setError("All match fields are required.");
+      setError("Please complete every match field.");
       return;
     }
 
@@ -81,7 +150,9 @@ export default function Matches() {
         league_id: Number(form.league_id),
         home_team_id: Number(form.home_team_id),
         away_team_id: Number(form.away_team_id),
-        scheduled_at: new Date(form.scheduled_at).toISOString(),
+        scheduled_at: new Date(
+          form.scheduled_at
+        ).toISOString(),
       });
 
       setForm({
@@ -91,6 +162,7 @@ export default function Matches() {
         scheduled_at: "",
       });
 
+      setMessage("Match created successfully.");
       await loadData();
     } catch (err) {
       setError(
@@ -102,373 +174,502 @@ export default function Matches() {
     }
   }
 
-  async function updateScore(match) {
-    const home = window.prompt(
-      `Home score for ${teamName(match.home_team_id)}:`,
-      match.home_score
-    );
-
-    if (home === null) return;
-
-    const away = window.prompt(
-      `Away score for ${teamName(match.away_team_id)}:`,
-      match.away_score
-    );
-
-    if (away === null) return;
-
-    const homeScore = Number(home);
-    const awayScore = Number(away);
-
-    if (
-      !Number.isInteger(homeScore) ||
-      !Number.isInteger(awayScore) ||
-      homeScore < 0 ||
-      awayScore < 0
-    ) {
-      setError("Scores must be non-negative whole numbers.");
-      return;
-    }
-
+  async function updateMatch(matchId, endpoint, payload) {
     try {
+      setActionId(matchId);
       setError("");
-
-      await api.patch(`/api/admin/matches/${match.id}/score`, {
-        home_score: homeScore,
-        away_score: awayScore,
-      });
-
-      await loadData();
-    } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-          "Failed to update score."
-      );
-    }
-  }
-
-  async function updateStatus(match, status) {
-    try {
-      setError("");
-
-      await api.patch(`/api/admin/matches/${match.id}/status`, {
-        status,
-      });
-
-      await loadData();
-    } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-          "Failed to update match status."
-      );
-    }
-  }
-
-  async function toggleFeatured(match) {
-    try {
-      setError("");
+      setMessage("");
 
       await api.patch(
-        `/api/admin/matches/${match.id}/featured`,
-        {
-          is_featured: !match.is_featured,
-        }
+        `/api/admin/matches/${matchId}/${endpoint}`,
+        payload
       );
 
+      setMessage("Match updated successfully.");
       await loadData();
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-          "Failed to update featured status."
+          "Failed to update match."
       );
+    } finally {
+      setActionId(null);
     }
   }
 
-  async function toggleBetting(match) {
+  async function deleteMatch(match) {
+    const confirmed = window.confirm(
+      `Delete ${teamName(match.home_team_id)} vs ${teamName(
+        match.away_team_id
+      )}?`
+    );
+
+    if (!confirmed) return;
+
     try {
+      setActionId(match.id);
       setError("");
+      setMessage("");
 
-      await api.patch(
-        `/api/admin/matches/${match.id}/betting`,
-        {
-          is_betting_open: !match.is_betting_open,
-        }
+      await api.delete(
+        `/api/admin/matches/${match.id}`
       );
 
+      setMessage("Match deleted successfully.");
       await loadData();
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-          "Failed to update betting status."
+          "Failed to delete match."
       );
+    } finally {
+      setActionId(null);
     }
   }
-
-  const selectedLeagueTeams = teams.filter(
-    (team) =>
-      !form.league_id ||
-      team.league_id === Number(form.league_id)
-  );
 
   return (
     <div className="page">
-      <main className="container" style={{ padding: "40px 0" }}>
-        <h1>Manage Matches</h1>
-        <p>
-          Create matches, manage scores, betting and live status.
-        </p>
+      <main
+        className="container"
+        style={{
+          padding: "24px 16px 60px",
+          maxWidth: "1100px",
+          margin: "0 auto",
+        }}
+      >
+        <div style={{ marginBottom: "24px" }}>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "clamp(26px, 5vw, 38px)",
+            }}
+          >
+            ⚽ Matches
+          </h1>
+
+          <p style={{ color: "#64748b" }}>
+            Create matches and control live, featured and
+            betting status.
+          </p>
+        </div>
 
         {error && (
           <div
             style={{
-              margin: "20px 0",
-              padding: "12px",
-              borderRadius: "8px",
+              marginBottom: "16px",
+              padding: "14px",
+              borderRadius: "12px",
               background: "#fee2e2",
               color: "#991b1b",
+              fontWeight: 700,
             }}
           >
             {error}
           </div>
         )}
 
-        <form
-          onSubmit={createMatch}
+        {message && (
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "14px",
+              borderRadius: "12px",
+              background: "#dcfce7",
+              color: "#166534",
+              fontWeight: 700,
+            }}
+          >
+            {message}
+          </div>
+        )}
+
+        <section
           style={{
-            marginTop: "30px",
             padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px",
+            borderRadius: "18px",
+            background:
+              "linear-gradient(135deg,#111827,#312e81)",
+            color: "#fff",
+            marginBottom: "30px",
           }}
         >
-          <h2>Create Match</h2>
+          <h2 style={{ marginTop: 0 }}>
+            ➕ Create Match
+          </h2>
 
-          <div style={{ display: "grid", gap: "12px" }}>
-            <select
-              value={form.league_id}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  league_id: e.target.value,
-                  home_team_id: "",
-                  away_team_id: "",
-                })
-              }
+          <form onSubmit={createMatch}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit,minmax(220px,1fr))",
+                gap: "14px",
+              }}
             >
-              <option value="">Select league</option>
-
-              {leagues.map((league) => (
-                <option key={league.id} value={league.id}>
-                  {league.name}
+              <select
+                name="league_id"
+                value={form.league_id}
+                onChange={handleChange}
+                style={inputStyle}
+              >
+                <option value="">
+                  Select league
                 </option>
-              ))}
-            </select>
 
-            <select
-              value={form.home_team_id}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  home_team_id: e.target.value,
-                })
-              }
-            >
-              <option value="">Select home team</option>
+                {leagues.map((league) => (
+                  <option
+                    key={league.id}
+                    value={league.id}
+                  >
+                    {league.name}
+                  </option>
+                ))}
+              </select>
 
-              {selectedLeagueTeams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
+              <select
+                name="home_team_id"
+                value={form.home_team_id}
+                onChange={handleChange}
+                style={inputStyle}
+              >
+                <option value="">
+                  Home team
                 </option>
-              ))}
-            </select>
 
-            <select
-              value={form.away_team_id}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  away_team_id: e.target.value,
-                })
-              }
-            >
-              <option value="">Select away team</option>
-
-              {selectedLeagueTeams
-                .filter(
-                  (team) =>
-                    String(team.id) !== form.home_team_id
-                )
-                .map((team) => (
-                  <option key={team.id} value={team.id}>
+                {teams.map((team) => (
+                  <option
+                    key={team.id}
+                    value={team.id}
+                  >
                     {team.name}
                   </option>
                 ))}
-            </select>
+              </select>
 
-            <input
-              type="datetime-local"
-              value={form.scheduled_at}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  scheduled_at: e.target.value,
-                })
-              }
-            />
+              <select
+                name="away_team_id"
+                value={form.away_team_id}
+                onChange={handleChange}
+                style={inputStyle}
+              >
+                <option value="">
+                  Away team
+                </option>
 
-            <button type="submit" disabled={saving}>
-              {saving ? "Creating..." : "Create Match"}
+                {teams.map((team) => (
+                  <option
+                    key={team.id}
+                    value={team.id}
+                  >
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="datetime-local"
+                name="scheduled_at"
+                value={form.scheduled_at}
+                onChange={handleChange}
+                style={inputStyle}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                marginTop: "16px",
+                width: "100%",
+                padding: "13px",
+                border: 0,
+                borderRadius: "12px",
+                background: "#22c55e",
+                color: "#fff",
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              {saving
+                ? "Creating..."
+                : "Create Match"}
             </button>
+          </form>
+        </section>
+
+        <h2>All Matches</h2>
+
+        {loading ? (
+          <p>Loading matches...</p>
+        ) : matches.length === 0 ? (
+          <div
+            style={{
+              padding: "30px",
+              textAlign: "center",
+              background: "#f1f5f9",
+              borderRadius: "16px",
+            }}
+          >
+            No matches created yet.
           </div>
-        </form>
-
-        <section style={{ marginTop: "35px" }}>
-          <h2>Matches</h2>
-
-          {loading ? (
-            <p>Loading matches...</p>
-          ) : matches.length === 0 ? (
-            <p>No matches found.</p>
-          ) : (
-            <div style={{ display: "grid", gap: "15px" }}>
-              {matches.map((match) => (
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: "16px",
+            }}
+          >
+            {matches.map((match) => (
+              <article
+                key={match.id}
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow:
+                    "0 5px 20px rgba(15,23,42,.06)",
+                }}
+              >
                 <div
-                  key={match.id}
                   style={{
-                    padding: "18px",
-                    border: "1px solid #ddd",
-                    borderRadius: "12px",
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    gap: "12px",
+                    flexWrap: "wrap",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: "15px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div>
-                      <strong style={{ fontSize: "18px" }}>
-                        {teamName(match.home_team_id)}
-                        {" vs "}
-                        {teamName(match.away_team_id)}
-                      </strong>
-
-                      <div style={{ marginTop: "5px" }}>
-                        {leagueName(match.league_id)}
-                      </div>
-
-                      <div style={{ marginTop: "5px" }}>
-                        {new Date(
-                          match.scheduled_at
-                        ).toLocaleString()}
-                      </div>
+                  <div>
+                    <div
+                      style={{
+                        color: "#6366f1",
+                        fontWeight: 800,
+                        fontSize: "13px",
+                      }}
+                    >
+                      {leagueName(
+                        match.league_id
+                      )}
                     </div>
 
-                    <div style={{ textAlign: "right" }}>
-                      <strong style={{ fontSize: "24px" }}>
-                        {match.home_score} - {match.away_score}
-                      </strong>
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        fontSize: "18px",
+                        fontWeight: 900,
+                      }}
+                    >
+                      {teamName(
+                        match.home_team_id
+                      )}{" "}
+                      <span
+                        style={{
+                          color: "#94a3b8",
+                        }}
+                      >
+                        vs
+                      </span>{" "}
+                      {teamName(
+                        match.away_team_id
+                      )}
+                    </div>
 
-                      <div>
-                        Status: <strong>{match.status}</strong>
-                      </div>
+                    <div
+                      style={{
+                        marginTop: "6px",
+                        color: "#64748b",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {formatDate(
+                        match.scheduled_at
+                      )}
                     </div>
                   </div>
 
                   <div
                     style={{
-                      marginTop: "15px",
                       display: "flex",
-                      gap: "8px",
+                      gap: "6px",
                       flexWrap: "wrap",
+                      alignItems: "flex-start",
                     }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => updateScore(match)}
-                    >
-                      Update Score
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateStatus(
-                          match,
-                          match.status === "live"
-                            ? "upcoming"
-                            : "live"
-                        )
+                    <StatusBadge
+                      type={
+                        match.is_live
+                          ? "live"
+                          : "default"
                       }
                     >
-                      {match.status === "live"
-                        ? "Stop Live"
-                        : "Make Live"}
-                    </button>
+                      {match.is_live
+                        ? "🔴 LIVE"
+                        : match.status}
+                    </StatusBadge>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateStatus(match, "ended")
+                    {match.is_featured && (
+                      <StatusBadge type="featured">
+                        ⭐ Featured
+                      </StatusBadge>
+                    )}
+
+                    <StatusBadge
+                      type={
+                        match.is_betting_open
+                          ? "open"
+                          : "closed"
                       }
-                    >
-                      End Match
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateStatus(match, "suspended")
-                      }
-                    >
-                      Suspend
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => toggleFeatured(match)}
-                    >
-                      {match.is_featured
-                        ? "★ Unfeature"
-                        : "☆ Feature"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => toggleBetting(match)}
                     >
                       {match.is_betting_open
-                        ? "Close Betting"
-                        : "Open Betting"}
-                    </button>
-                  </div>
-
-                  <div style={{ marginTop: "10px" }}>
-                    Betting:{" "}
-                    <strong>
-                      {match.is_betting_open
-                        ? "OPEN"
-                        : "CLOSED"}
-                    </strong>
-                    {" · "}
-                    Featured:{" "}
-                    <strong>
-                      {match.is_featured ? "YES" : "NO"}
-                    </strong>
-                    {" · "}
-                    Live:{" "}
-                    <strong>
-                      {match.is_live ? "YES" : "NO"}
-                    </strong>
+                        ? "Betting Open"
+                        : "Betting Closed"}
+                    </StatusBadge>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
+
+                <div
+                  style={{
+                    marginTop: "18px",
+                    padding: "14px",
+                    background: "#f8fafc",
+                    borderRadius: "12px",
+                    textAlign: "center",
+                    fontSize: "24px",
+                    fontWeight: 900,
+                  }}
+                >
+                  {match.home_score}{" "}
+                  <span
+                    style={{
+                      color: "#94a3b8",
+                    }}
+                  >
+                    -
+                  </span>{" "}
+                  {match.away_score}
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fit,minmax(150px,1fr))",
+                    gap: "8px",
+                    marginTop: "14px",
+                  }}
+                >
+                  <button
+                    disabled={
+                      actionId === match.id
+                    }
+                    onClick={() =>
+                      updateMatch(
+                        match.id,
+                        "featured",
+                        {
+                          is_featured:
+                            !match.is_featured,
+                        }
+                      )
+                    }
+                    style={buttonStyle(
+                      "#f59e0b"
+                    )}
+                  >
+                    {match.is_featured
+                      ? "⭐ Remove Featured"
+                      : "⭐ Mark Featured"}
+                  </button>
+
+                  <button
+                    disabled={
+                      actionId === match.id
+                    }
+                    onClick={() =>
+                      updateMatch(
+                        match.id,
+                        "status",
+                        {
+                          status: match.is_live
+                            ? "upcoming"
+                            : "live",
+                        }
+                      )
+                    }
+                    style={buttonStyle(
+                      "#16a34a"
+                    )}
+                  >
+                    {match.is_live
+                      ? "⏹ Stop Live"
+                      : "🔴 Mark Live"}
+                  </button>
+
+                  <button
+                    disabled={
+                      actionId === match.id
+                    }
+                    onClick={() =>
+                      updateMatch(
+                        match.id,
+                        "betting",
+                        {
+                          is_betting_open:
+                            !match.is_betting_open,
+                        }
+                      )
+                    }
+                    style={buttonStyle(
+                      "#2563eb"
+                    )}
+                  >
+                    {match.is_betting_open
+                      ? "🔒 Close Betting"
+                      : "🔓 Open Betting"}
+                  </button>
+
+                  <button
+                    disabled={
+                      actionId === match.id
+                    }
+                    onClick={() =>
+                      deleteMatch(match)
+                    }
+                    style={buttonStyle(
+                      "#dc2626"
+                    )}
+                  >
+                    🗑 Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
+}
+
+const inputStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "13px",
+  borderRadius: "10px",
+  border: "1px solid #cbd5e1",
+  background: "#fff",
+  color: "#111827",
+};
+
+function buttonStyle(background) {
+  return {
+    border: 0,
+    borderRadius: "10px",
+    padding: "11px 10px",
+    background,
+    color: "#fff",
+    fontWeight: 800,
+    cursor: "pointer",
+  };
 }

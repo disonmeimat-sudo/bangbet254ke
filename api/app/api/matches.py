@@ -298,3 +298,26 @@ def update_betting(
     db.refresh(match)
 
     return match
+
+
+@router.delete(
+    "/{match_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_match(
+    match_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    match = db.get(Match, match_id)
+
+    if not match:
+        raise HTTPException(
+            status_code=404,
+            detail="Match not found",
+        )
+
+    db.delete(match)
+    db.commit()
+
+    return None

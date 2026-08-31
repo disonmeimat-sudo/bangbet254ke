@@ -1,39 +1,145 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useBetSlip } from "../../context/BetSlipContext";
 import MatchCard from "../../components/matches/MatchCard";
 import BetSlip from "../../components/betting/BetSlip";
-
-const demoMatches = [
-  { id: 1, league: "Premier League", time: "16:00", home_team: "Chelsea", away_team: "Brighton", home_odds: "1.91", draw_odds: "3.70", away_odds: "4.10" },
-  { id: 2, league: "Premier League", time: "18:30", home_team: "Arsenal", away_team: "Aston Villa", home_odds: "1.55", draw_odds: "4.20", away_odds: "5.80" },
-  { id: 3, league: "La Liga", time: "21:00", home_team: "Barcelona", away_team: "Sevilla", home_odds: "1.42", draw_odds: "4.80", away_odds: "6.50" },
-  { id: 4, league: "Serie A", time: "20:45", home_team: "Inter Milan", away_team: "Roma", home_odds: "1.68", draw_odds: "3.90", away_odds: "5.10" },
-];
-
-const liveMatches = [
-  { id: 101, league: "Premier League", time: "72'", home_team: "Liverpool", away_team: "Newcastle", home_score: 2, away_score: 1, home_odds: "1.35", draw_odds: "4.50", away_odds: "8.20", live: true },
-  { id: 102, league: "La Liga", time: "58'", home_team: "Real Madrid", away_team: "Valencia", home_score: 1, away_score: 0, home_odds: "1.28", draw_odds: "5.20", away_odds: "10.00", live: true },
-];
+import { getPublicMatches } from "../../api/matches";
 
 function SportIcon({ icon, label }) {
   return (
-    <button className="sport-item">
+    <button className="sport-item" type="button">
       <span className="sport-icon">{icon}</span>
       <span>{label}</span>
     </button>
   );
 }
 
+function normalizeMatch(match) {
+  return {
+    ...match,
+
+    league:
+      match.league ||
+      match.league_name ||
+      {
+        name: match.league?.name || match.league_name || "Football",
+      },
+
+    home_team:
+      match.home_team ||
+      match.home_team_name ||
+      {
+        name: match.home_team_name || "Home",
+      },
+
+    away_team:
+      match.away_team ||
+      match.away_team_name ||
+      {
+        name: match.away_team_name || "Away",
+      },
+
+    home_score: Number(match.home_score ?? 0),
+    away_score: Number(match.away_score ?? 0),
+
+    is_live:
+      Boolean(match.is_live) ||
+      String(match.status || "").toLowerCase() === "live",
+
+    is_betting_open:
+      match.is_betting_open !== false,
+
+    markets: Array.isArray(match.markets)
+      ? match.markets
+      : [],
+
+    odds: Array.isArray(match.odds)
+      ? match.odds
+      : [],
+  };
+}
+
 export default function Dashboard() {
   const { user, loading, logout } = useAuth();
+
   const {
     selections = [],
     betHistory = [],
   } = useBetSlip();
+
   const navigate = useNavigate();
+
   const [tab, setTab] = useState("home");
+  const [matches, setMatches] = useState([]);
+  const [matchesLoading, setMatchesLoading] = useState(true);
+  const [matchesError, setMatchesError] = useState("");
+
+  async function loadMatches() {
+    try {
+      setMatchesLoading(true);
+      setMatchesError("");
+
+      const data = await getPublicMatches();
+
+      const normalized = Array.isArray(data)
+        ? data.map(normalizeMatch)
+        : [];
+
+      setMatches(normalized);
+    } catch (err) {
+      console.error("BangBet254 public matches error:", err);
+
+      setMatchesError(
+        err.response?.data?.detail ||
+        "Unable to load matches from BangBet254."
+      );
+
+      setMatches([]);
+    } finally {
+      setMatchesLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMatches();
+
+    const interval = setInterval(() => {
+      loadMatches();
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const liveMatches = useMemo(
+    () => matches.filter((match) => match.is_live),
+    [matches]
+  );
+
+  const upcomingMatches = useMemo(
+    () =>
+      matches.filter(
+        (match) =>
+          !match.is_live &&
+          match.is_betting_open !== false
+      ),
+    [matches]
+  );
+
+  const featuredMatches = useMemo(
+    () => {
+      const featured = upcomingMatches.filter(
+        (match) => match.is_featured
+      );
+
+      return featured.length > 0
+        ? featured
+        : upcomingMatches;
+    },
+    [upcomingMatches]
+  );
+
+  const displayTopMatches = featuredMatches.slice(0, 12);
 
   const balance =
     user?.balance ??
@@ -43,7 +149,10 @@ export default function Dashboard() {
 
   function go(section) {
     setTab(section);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function handleLogout() {
@@ -66,50 +175,78 @@ export default function Dashboard() {
       {/* HEADER */}
       <header className="bb-header">
         <div className="bb-header-top">
+
           <div className="bb-brand">
             BANGBET<span>254</span>
           </div>
 
           <div className="bb-header-actions">
-            <button className="bb-search-button">🔍</button>
+
+            <button
+              className="bb-search-button"
+              type="button"
+            >
+              🔍
+            </button>
 
             <button
               className="bb-account"
+              type="button"
               onClick={() => go("me")}
             >
-              <span className="bb-avatar">👤</span>
+              <span className="bb-avatar">
+                👤
+              </span>
 
               <span className="bb-account-info">
                 <strong>
                   {user?.full_name || "Account"}
                 </strong>
+
                 <small>
-                  KSh {Number(balance).toLocaleString()}
+                  KSh{" "}
+                  {Number(balance).toLocaleString(
+                    "en-KE"
+                  )}
                 </small>
               </span>
             </button>
+
           </div>
         </div>
 
         <div className="bb-main-nav">
+
           <button
-            className={`bb-main-nav-item ${tab === "home" ? "active" : ""}`}
+            className={`bb-main-nav-item ${
+              tab === "home" ? "active" : ""
+            }`}
+            type="button"
             onClick={() => go("home")}
           >
             ⚽ Sports
           </button>
 
           <button
-            className={`bb-main-nav-item ${tab === "live" ? "active" : ""}`}
+            className={`bb-main-nav-item ${
+              tab === "live" ? "active" : ""
+            }`}
+            type="button"
             onClick={() => go("live")}
           >
             🔴 Live
+            {liveMatches.length > 0 && (
+              <b>{liveMatches.length}</b>
+            )}
           </button>
 
           <div className="bb-nav-search">
             <span>🔍</span>
-            <input placeholder="Search teams, leagues..." />
+            <input
+              placeholder="Search teams, leagues..."
+            />
           </div>
+
         </div>
       </header>
 
@@ -118,274 +255,623 @@ export default function Dashboard() {
         <>
           <section className="bb-sports-strip">
             <div className="bb-sports-scroll">
-              <SportIcon icon="⚽" label="Football" />
-              <SportIcon icon="🏆" label="Jackpot" />
-              <SportIcon icon="🎯" label="Virtuals" />
-              <SportIcon icon="🎟️" label="Pick12" />
-              <SportIcon icon="🤝" label="Affiliate" />
-              <SportIcon icon="🔥" label="Popular" />
-              <SportIcon icon="▦" label="All Sports" />
+
+              <SportIcon
+                icon="⚽"
+                label="Football"
+              />
+
+              <SportIcon
+                icon="🏆"
+                label="Jackpot"
+              />
+
+              <SportIcon
+                icon="🎯"
+                label="Virtuals"
+              />
+
+              <SportIcon
+                icon="🎟️"
+                label="Pick12"
+              />
+
+              <SportIcon
+                icon="🤝"
+                label="Affiliate"
+              />
+
+              <SportIcon
+                icon="🔥"
+                label="Popular"
+              />
+
+              <SportIcon
+                icon="▦"
+                label="All Sports"
+              />
+
             </div>
           </section>
 
           <main className="bb-content">
 
+            {/* COMPETITIONS */}
             <div className="bb-competition-scroll">
-              <button className="bb-competition active">
+
+              <button
+                className="bb-competition active"
+                type="button"
+              >
                 Today's Football
               </button>
-              <button className="bb-competition">
+
+              <button
+                className="bb-competition"
+                type="button"
+              >
                 Euro Top 5
               </button>
-              <button className="bb-competition">
+
+              <button
+                className="bb-competition"
+                type="button"
+              >
                 Champions League
               </button>
-              <button className="bb-competition">
+
+              <button
+                className="bb-competition"
+                type="button"
+              >
                 Premier League
               </button>
-              <button className="bb-competition">
+
+              <button
+                className="bb-competition"
+                type="button"
+              >
                 La Liga
               </button>
+
             </div>
 
+            {/* PROMO */}
             <div className="bb-promo">
               <div>
                 <span className="bb-promo-small">
                   BANGBET254
                 </span>
+
                 <strong>
                   Bet on today's biggest matches
                 </strong>
+
                 <p>
-                  More matches. More markets. More excitement.
+                  Matches and odds are managed from the
+                  BangBet254 admin panel.
                 </p>
               </div>
 
-              <div className="bb-promo-ball">⚽</div>
+              <div className="bb-promo-ball">
+                ⚽
+              </div>
             </div>
 
-            <section className="bb-section">
-              <div className="bb-section-heading">
-                <div>
-                  <span className="bb-section-kicker">TODAY</span>
-                  <h2>Top Matches</h2>
+            {/* LOADING */}
+            {matchesLoading && (
+              <section className="bb-section">
+                <div className="bb-page-title">
+                  <span className="bb-section-kicker">
+                    BANGBET254
+                  </span>
+
+                  <h2>
+                    Loading matches...
+                  </h2>
+
+                  <p>
+                    Getting the latest games and betting
+                    markets.
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* ERROR */}
+            {!matchesLoading && matchesError && (
+              <section className="bb-section">
+
+                <div className="bb-empty-history">
+                  <div>⚠️</div>
+
+                  <strong>
+                    Unable to load matches
+                  </strong>
+
+                  <p>
+                    {matchesError}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={loadMatches}
+                  >
+                    Try Again
+                  </button>
                 </div>
 
-                <button
-                  className="bb-view-all"
-                  onClick={() => navigate("/matches")}
-                >
-                  View all →
-                </button>
-              </div>
+              </section>
+            )}
 
-              <div className="bb-matches-grid">
-                {demoMatches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                  />
-                ))}
-              </div>
-            </section>
+            {/* TOP MATCHES */}
+            {!matchesLoading &&
+              !matchesError && (
+                <section className="bb-section">
 
-            <section className="bb-section">
-              <div className="bb-section-heading">
-                <div className="bb-live-heading">
-                  <span className="bb-live-dot" />
-                  <div>
-                    <span className="bb-section-kicker">
-                      LIVE NOW
-                    </span>
-                    <h2>Live Football</h2>
+                  <div className="bb-section-heading">
+
+                    <div>
+                      <span className="bb-section-kicker">
+                        TODAY
+                      </span>
+
+                      <h2>
+                        Top Matches
+                      </h2>
+                    </div>
+
+                    <button
+                      className="bb-view-all"
+                      type="button"
+                      onClick={() =>
+                        navigate("/matches")
+                      }
+                    >
+                      View all →
+                    </button>
+
                   </div>
-                </div>
 
-                <button
-                  className="bb-view-all"
-                  onClick={() => go("live")}
-                >
-                  All live →
-                </button>
-              </div>
+                  {displayTopMatches.length === 0 ? (
+                    <div className="bb-empty-history">
 
-              <div className="bb-live-grid">
-                {liveMatches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    live
-                  />
-                ))}
-              </div>
-            </section>
+                      <div>⚽</div>
+
+                      <strong>
+                        No matches available
+                      </strong>
+
+                      <p>
+                        Games created and activated by
+                        the BangBet254 admin will appear
+                        here automatically.
+                      </p>
+
+                    </div>
+                  ) : (
+                    <div className="bb-matches-grid">
+
+                      {displayTopMatches.map(
+                        (match) => (
+                          <MatchCard
+                            key={match.id}
+                            match={match}
+                          />
+                        )
+                      )}
+
+                    </div>
+                  )}
+
+                </section>
+              )}
+
+            {/* LIVE MATCHES */}
+            {!matchesLoading &&
+              !matchesError &&
+              liveMatches.length > 0 && (
+                <section className="bb-section">
+
+                  <div className="bb-section-heading">
+
+                    <div className="bb-live-heading">
+
+                      <span className="bb-live-dot" />
+
+                      <div>
+                        <span className="bb-section-kicker">
+                          LIVE NOW
+                        </span>
+
+                        <h2>
+                          Live Football
+                        </h2>
+                      </div>
+
+                    </div>
+
+                    <button
+                      className="bb-view-all"
+                      type="button"
+                      onClick={() => go("live")}
+                    >
+                      All live →
+                    </button>
+
+                  </div>
+
+                  <div className="bb-live-grid">
+
+                    {liveMatches.map(
+                      (match) => (
+                        <MatchCard
+                          key={match.id}
+                          match={match}
+                          live
+                        />
+                      )
+                    )}
+
+                  </div>
+
+                </section>
+              )}
+
+            {/* NO LIVE */}
+            {!matchesLoading &&
+              !matchesError &&
+              liveMatches.length === 0 && (
+                <section className="bb-section">
+
+                  <div className="bb-section-heading">
+
+                    <div>
+                      <span className="bb-section-kicker">
+                        LIVE NOW
+                      </span>
+
+                      <h2>
+                        Live Football
+                      </h2>
+                    </div>
+
+                  </div>
+
+                  <div className="bb-empty-history">
+
+                    <div>🔴</div>
+
+                    <strong>
+                      No live matches
+                    </strong>
+
+                    <p>
+                      Live games will appear here when
+                      the admin marks a match as live.
+                    </p>
+
+                  </div>
+
+                </section>
+              )}
 
           </main>
         </>
       )}
 
-      {/* LIVE */}
+      {/* LIVE TAB */}
       {tab === "live" && (
         <main className="bb-content bb-dashboard-page">
+
           <div className="bb-page-title">
-            <span className="bb-section-kicker">LIVE NOW</span>
-            <h1>Live Matches 🔴</h1>
-            <p>Follow live matches and select your odds.</p>
+
+            <span className="bb-section-kicker">
+              LIVE NOW
+            </span>
+
+            <h1>
+              Live Matches 🔴
+            </h1>
+
+            <p>
+              Live matches and their current scores and
+              betting markets.
+            </p>
+
           </div>
 
-          <div className="bb-live-grid">
-            {liveMatches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                live
-              />
-            ))}
-          </div>
+          {matchesLoading ? (
+            <div className="bb-empty-history">
+              <div>⏳</div>
+              <strong>
+                Loading live matches...
+              </strong>
+            </div>
+          ) : matchesError ? (
+            <div className="bb-empty-history">
+              <div>⚠️</div>
+              <strong>
+                Unable to load live matches
+              </strong>
+              <p>{matchesError}</p>
+              <button
+                type="button"
+                onClick={loadMatches}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : liveMatches.length === 0 ? (
+            <div className="bb-empty-history">
+              <div>🔴</div>
+              <strong>
+                No live matches
+              </strong>
+              <p>
+                Matches marked LIVE by the admin will
+                automatically appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="bb-live-grid">
+
+              {liveMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  live
+                />
+              ))}
+
+            </div>
+          )}
+
         </main>
       )}
 
       {/* WIN / BETSLIP */}
       {tab === "win" && (
         <main className="bb-content bb-dashboard-page">
+
           <div className="bb-page-title">
-            <span className="bb-section-kicker">YOUR BET</span>
-            <h1>Win 🎯</h1>
-            <p>Review your selections and possible winnings.</p>
+
+            <span className="bb-section-kicker">
+              YOUR BET
+            </span>
+
+            <h1>
+              Win 🎯
+            </h1>
+
+            <p>
+              Review your selections and possible
+              winnings.
+            </p>
+
           </div>
 
           <div className="bb-dashboard-betslip">
             <BetSlip />
           </div>
+
         </main>
       )}
 
       {/* MY BETS */}
       {tab === "mybets" && (
         <main className="bb-content bb-dashboard-page">
+
           <div className="bb-page-title">
-            <span className="bb-section-kicker">BETTING</span>
-            <h1>My Bets 📋</h1>
+
+            <span className="bb-section-kicker">
+              BETTING
+            </span>
+
+            <h1>
+              My Bets 📋
+            </h1>
+
             <p>
               Your selected odds and betting history.
             </p>
+
           </div>
 
           <section className="bb-my-bets-card">
+
             <div className="bb-my-bets-header">
-              <strong>Current selections</strong>
-              <span>{selections.length}</span>
+              <strong>
+                Current selections
+              </strong>
+
+              <span>
+                {selections.length}
+              </span>
             </div>
 
             {selections.length === 0 ? (
               <div className="bb-empty-history">
+
                 <div>🎟️</div>
-                <strong>No selections yet</strong>
+
+                <strong>
+                  No selections yet
+                </strong>
+
                 <p>
-                  Select odds from the matches to build your bet.
+                  Select odds from the matches to build
+                  your bet.
                 </p>
 
-                <button onClick={() => go("home")}>
+                <button
+                  type="button"
+                  onClick={() => go("home")}
+                >
                   Browse Matches
                 </button>
+
               </div>
             ) : (
               <div className="bb-selection-list">
-                {selections.map((selection) => (
-                  <div
-                    className="bb-history-row"
-                    key={selection.match_id}
-                  >
-                    <div>
-                      <strong>
-                        {selection.home_team} vs{" "}
-                        {selection.away_team}
-                      </strong>
-                      <small>
-                        {selection.selection}
-                      </small>
-                    </div>
 
-                    <strong>
-                      {Number(selection.odds).toFixed(2)}
-                    </strong>
-                  </div>
-                ))}
+                {selections.map(
+                  (selection) => (
+                    <div
+                      className="bb-history-row"
+                      key={
+                        selection.match_id
+                      }
+                    >
+
+                      <div>
+                        <strong>
+                          {selection.home_team}{" "}
+                          vs{" "}
+                          {selection.away_team}
+                        </strong>
+
+                        <small>
+                          {selection.selection}
+                        </small>
+                      </div>
+
+                      <strong>
+                        {Number(
+                          selection.odds
+                        ).toFixed(2)}
+                      </strong>
+
+                    </div>
+                  )
+                )}
+
               </div>
             )}
+
           </section>
 
           <section className="bb-my-bets-card">
+
             <div className="bb-my-bets-header">
-              <strong>Bet history</strong>
-              <span>{betHistory.length}</span>
+              <strong>
+                Bet history
+              </strong>
+
+              <span>
+                {betHistory.length}
+              </span>
             </div>
 
             {betHistory.length === 0 ? (
               <div className="bb-empty-history">
+
                 <div>📊</div>
-                <strong>No bets yet</strong>
+
+                <strong>
+                  No bets yet
+                </strong>
+
                 <p>
-                  Bets you place will appear here with all
-                  selected matches and odds.
+                  Bets you place will appear here with
+                  all selected matches and odds.
                 </p>
+
               </div>
             ) : (
               <div className="bb-bet-history-list">
+
                 {betHistory.map((bet) => (
                   <article
                     className="bb-bet-history-card"
                     key={bet.id}
                   >
+
                     <div className="bb-bet-history-top">
+
                       <div>
-                        <strong>{bet.id}</strong>
+                        <strong>
+                          {bet.id}
+                        </strong>
+
                         <small>
-                          {new Date(bet.created_at).toLocaleString(
+                          {new Date(
+                            bet.created_at
+                          ).toLocaleString(
                             "en-KE",
                             {
-                              dateStyle: "medium",
-                              timeStyle: "short",
+                              dateStyle:
+                                "medium",
+                              timeStyle:
+                                "short",
                             }
                           )}
                         </small>
                       </div>
 
                       <span className="bb-bet-status">
-                        {bet.status || "Pending"}
+                        {bet.status ||
+                          "Pending"}
                       </span>
+
                     </div>
 
                     <div className="bb-bet-history-selections">
-                      {bet.selections?.map((selection, index) => (
-                        <div
-                          className="bb-bet-history-selection"
-                          key={`${bet.id}-${selection.match_id}-${index}`}
-                        >
-                          <div>
+
+                      {bet.selections?.map(
+                        (
+                          selection,
+                          index
+                        ) => (
+                          <div
+                            className="bb-bet-history-selection"
+                            key={`${bet.id}-${selection.match_id}-${index}`}
+                          >
+
+                            <div>
+
+                              <strong>
+                                {
+                                  selection.home_team
+                                }{" "}
+                                vs{" "}
+                                {
+                                  selection.away_team
+                                }
+                              </strong>
+
+                              <small>
+                                {
+                                  selection.selection
+                                }
+                              </small>
+
+                            </div>
+
                             <strong>
-                              {selection.home_team} vs{" "}
-                              {selection.away_team}
+                              {Number(
+                                selection.odds
+                              ).toFixed(2)}
                             </strong>
 
-                            <small>
-                              {selection.selection}
-                            </small>
                           </div>
+                        )
+                      )}
 
-                          <strong>
-                            {Number(selection.odds).toFixed(2)}
-                          </strong>
-                        </div>
-                      ))}
                     </div>
 
                     <div className="bb-bet-history-summary">
+
                       <div>
-                        <span>Stake</span>
+                        <span>
+                          Stake
+                        </span>
+
                         <strong>
                           KSh{" "}
-                          {Number(bet.stake).toLocaleString(
+                          {Number(
+                            bet.stake
+                          ).toLocaleString(
                             "en-KE",
                             {
                               minimumFractionDigits: 2,
@@ -396,17 +882,27 @@ export default function Dashboard() {
                       </div>
 
                       <div>
-                        <span>Total Odds</span>
+                        <span>
+                          Total Odds
+                        </span>
+
                         <strong>
-                          {Number(bet.total_odds).toFixed(2)}
+                          {Number(
+                            bet.total_odds
+                          ).toFixed(2)}
                         </strong>
                       </div>
 
                       <div>
-                        <span>Possible Win</span>
+                        <span>
+                          Possible Win
+                        </span>
+
                         <strong>
                           KSh{" "}
-                          {Number(bet.possible_win).toLocaleString(
+                          {Number(
+                            bet.possible_win
+                          ).toLocaleString(
                             "en-KE",
                             {
                               minimumFractionDigits: 2,
@@ -415,12 +911,17 @@ export default function Dashboard() {
                           )}
                         </strong>
                       </div>
+
                     </div>
+
                   </article>
                 ))}
+
               </div>
             )}
+
           </section>
+
         </main>
       )}
 
@@ -429,72 +930,160 @@ export default function Dashboard() {
         <main className="bb-content bb-dashboard-page">
 
           <div className="bb-profile-hero">
-            <div className="bb-profile-avatar">👤</div>
+
+            <div className="bb-profile-avatar">
+              👤
+            </div>
 
             <div>
-              <span>Welcome back</span>
-              <h1>{user?.full_name || "User"}</h1>
-              <small>{user?.email || ""}</small>
+
+              <span>
+                Welcome back
+              </span>
+
+              <h1>
+                {user?.full_name ||
+                  "User"}
+              </h1>
+
+              <small>
+                {user?.email || ""}
+              </small>
+
             </div>
+
           </div>
 
           <div className="bb-balance-card">
-            <span>AVAILABLE BALANCE</span>
+
+            <span>
+              AVAILABLE BALANCE
+            </span>
+
             <strong>
-              KSh {Number(balance).toLocaleString()}
+              KSh{" "}
+              {Number(
+                balance
+              ).toLocaleString()}
             </strong>
 
             <div className="bb-wallet-actions">
-              <button onClick={() => navigate("/wallet")}>
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/wallet")
+                }
+              >
                 💰 Wallet
               </button>
 
-              <button onClick={() => navigate("/wallet")}>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/wallet")
+                }
+              >
                 ➕ Deposit
               </button>
 
-              <button onClick={() => navigate("/wallet")}>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/wallet")
+                }
+              >
                 ↗ Withdraw
               </button>
+
             </div>
+
           </div>
 
           <div className="bb-account-menu">
-            <button onClick={() => navigate("/profile")}>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/profile")
+              }
+            >
               <span>👤</span>
+
               <div>
-                <strong>Profile</strong>
-                <small>Manage your account</small>
+                <strong>
+                  Profile
+                </strong>
+
+                <small>
+                  Manage your account
+                </small>
               </div>
+
               <b>›</b>
             </button>
 
-            <button onClick={() => navigate("/wallet")}>
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/wallet")
+              }
+            >
               <span>💰</span>
+
               <div>
-                <strong>Wallet</strong>
-                <small>Deposit and withdraw</small>
+                <strong>
+                  Wallet
+                </strong>
+
+                <small>
+                  Deposit and withdraw
+                </small>
               </div>
+
               <b>›</b>
             </button>
 
-            <button onClick={() => navigate("/transactions")}>
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/transactions")
+              }
+            >
               <span>📋</span>
+
               <div>
-                <strong>Transactions</strong>
-                <small>View account activity</small>
+                <strong>
+                  Transactions
+                </strong>
+
+                <small>
+                  View account activity
+                </small>
               </div>
+
               <b>›</b>
             </button>
 
-            <button onClick={handleLogout}>
+            <button
+              type="button"
+              onClick={handleLogout}
+            >
               <span>🚪</span>
+
               <div>
-                <strong>Logout</strong>
-                <small>Sign out of BangBet254</small>
+                <strong>
+                  Logout
+                </strong>
+
+                <small>
+                  Sign out of BangBet254
+                </small>
               </div>
+
               <b>›</b>
             </button>
+
           </div>
 
         </main>
@@ -517,56 +1106,103 @@ export default function Dashboard() {
           right: 0,
           bottom: 0,
           height: "72px",
-          background: "red",
           zIndex: 999999999,
         }}
       >
 
         <button
+          type="button"
           onClick={() => go("home")}
-          className={`bb-bottom-item ${tab === "home" ? "active" : ""}`}
+          className={`bb-bottom-item ${
+            tab === "home"
+              ? "active"
+              : ""
+          }`}
         >
           <span>🏠</span>
-          <small>Home</small>
+          <small>
+            Home
+          </small>
         </button>
 
         <button
+          type="button"
           onClick={() => go("live")}
-          className={`bb-bottom-item ${tab === "live" ? "active" : ""}`}
+          className={`bb-bottom-item ${
+            tab === "live"
+              ? "active"
+              : ""
+          }`}
         >
           <span>🔴</span>
-          <small>Live</small>
-        </button>
+          <small>
+            Live
+          </small>
 
-        <button
-          onClick={() => go("win")}
-          className={`bb-bottom-item bb-win-nav ${tab === "win" ? "active" : ""}`}
-        >
-          <span>🎯</span>
-          <small>Win</small>
-
-          {selections.length > 0 && (
-            <b>{selections.length}</b>
+          {liveMatches.length > 0 && (
+            <b>
+              {liveMatches.length}
+            </b>
           )}
         </button>
 
         <button
-          onClick={() => go("mybets")}
-          className={`bb-bottom-item ${tab === "mybets" ? "active" : ""}`}
+          type="button"
+          onClick={() => go("win")}
+          className={`bb-bottom-item bb-win-nav ${
+            tab === "win"
+              ? "active"
+              : ""
+          }`}
         >
-          <span>📋</span>
-          <small>My Bets</small>
+          <span>🎯</span>
+
+          <small>
+            Win
+          </small>
+
+          {selections.length > 0 && (
+            <b>
+              {selections.length}
+            </b>
+          )}
+
         </button>
 
         <button
+          type="button"
+          onClick={() => go("mybets")}
+          className={`bb-bottom-item ${
+            tab === "mybets"
+              ? "active"
+              : ""
+          }`}
+        >
+          <span>📋</span>
+
+          <small>
+            My Bets
+          </small>
+        </button>
+
+        <button
+          type="button"
           onClick={() => go("me")}
-          className={`bb-bottom-item ${tab === "me" ? "active" : ""}`}
+          className={`bb-bottom-item ${
+            tab === "me"
+              ? "active"
+              : ""
+          }`}
         >
           <span>👤</span>
-          <small>Me</small>
+
+          <small>
+            Me
+          </small>
         </button>
 
       </nav>
+
     </div>
   );
 }

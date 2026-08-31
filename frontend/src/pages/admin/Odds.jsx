@@ -1,35 +1,49 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../../api/client";
 
 export default function Odds() {
-  const [odds, setOdds] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [markets, setMarkets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [odds, setOdds] = useState([]);
 
-  const [form, setForm] = useState({
-    market_id: "",
-    name: "",
-    value: "",
-  });
+  const [selectedMatch, setSelectedMatch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(null);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [edited, setEdited] = useState({});
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
 
-      const [oddsResponse, marketsResponse] = await Promise.all([
-        api.get("/api/admin/odds"),
+      const [
+        matchesResponse,
+        teamsResponse,
+        marketsResponse,
+        oddsResponse,
+      ] = await Promise.all([
+        api.get("/api/admin/matches"),
+        api.get("/api/admin/teams"),
         api.get("/api/admin/markets"),
+        api.get("/api/admin/odds"),
       ]);
 
-      setOdds(oddsResponse.data);
+      setMatches(matchesResponse.data);
+      setTeams(teamsResponse.data);
       setMarkets(marketsResponse.data);
+      setOdds(oddsResponse.data);
+
+      if (!selectedMatch && matchesResponse.data.length > 0) {
+        setSelectedMatch(String(matchesResponse.data[0].id));
+      }
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-          "Failed to load odds and markets."
+          "Failed to load matches, markets and odds."
       );
     } finally {
       setLoading(false);
@@ -40,226 +54,524 @@ export default function Odds() {
     loadData();
   }, []);
 
-  function handleChange(event) {
-    setForm({
-      ...form,
-      [event.target.name]: event.target.value,
+  const teamMap = useMemo(() => {
+    const map = {};
+    teams.forEach((team) => {
+      map[team.id] = team;
     });
+    return map;
+  }, [teams]);
+
+  const match = matches.find(
+    (item) => String(item.id) === String(selectedMatch)
+  );
+
+  const matchMarkets = markets.filter(
+    (market) =>
+      String(market.match_id) === String(selectedMatch)
+  );
+
+  function matchOdds(marketId) {
+    return odds.filter(
+      (odd) => String(odd.market_id) === String(marketId)
+    );
   }
 
-  async function createOdd(event) {
-    event.preventDefault();
-
-    if (
-      !form.market_id ||
-      !form.name.trim() ||
-      !form.value
-    ) {
-      setError("Market, odd name and odd value are required.");
-      return;
+  function getOddValue(odd) {
+    if (edited[odd.id] !== undefined) {
+      return edited[odd.id];
     }
 
-    const value = Number(form.value);
+    return Number(odd.value).toFixed(2);
+  }
+
+  function updateEditedValue(id, value) {
+    setEdited((current) => ({
+      ...current,
+      [id]: value,
+    }));
+  }
+
+  async function saveOdd(odd) {
+    const value = Number(getOddValue(odd));
 
     if (!Number.isFinite(value) || value <= 1) {
-      setError("Odd value must be greater than 1.0.");
+      setError("Odd value must be greater than 1.00.");
       return;
     }
 
     try {
-      setSaving(true);
+      setSaving(odd.id);
       setError("");
+      setMessage("");
 
-      await api.post("/api/admin/odds", {
-        market_id: Number(form.market_id),
-        name: form.name.trim(),
+      await api.patch(`/api/admin/odds/${odd.id}`, {
         value,
       });
 
-      setForm({
-        market_id: "",
-        name: "",
-        value: "",
+      setOdds((current) =>
+        current.map((item) =>
+          item.id === odd.id
+            ? { ...item, value }
+            : item
+        )
+      );
+
+      setEdited((current) => {
+        const next = { ...current };
+        delete next[odd.id];
+        return next;
       });
 
-      await loadData();
+      setMessage(
+        `"${odd.name}" updated to ${value.toFixed(2)}`
+      );
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-          "Failed to create odd."
+          "Failed to save odd."
       );
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
   }
 
   async function toggleOdd(odd) {
     try {
       setError("");
+      setMessage("");
 
       await api.patch(`/api/admin/odds/${odd.id}`, {
         is_active: !odd.is_active,
       });
 
-      await loadData();
+      setOdds((current) =>
+        current.map((item) =>
+          item.id === odd.id
+            ? { ...item, is_active: !item.is_active }
+            : item
+        )
+      );
+
+      setMessage(
+        `${odd.name} is now ${
+          !odd.is_active ? "active" : "inactive"
+        }.`
+      );
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-          "Failed to update odd."
+          "Failed to update odd status."
       );
     }
   }
 
-  async function deleteOdd(odd) {
-    const confirmed = window.confirm(
-      `Delete odd "${odd.name}"?`
+  if (loading) {
+    return (
+      <div className="page">
+        <main
+          className="container"
+          style={{ padding: "50px 20px" }}
+        >
+          <h1>⚽ Odds Management</h1>
+          <p>Loading betting markets...</p>
+        </main>
+      </div>
     );
-
-    if (!confirmed) return;
-
-    try {
-      setError("");
-
-      await api.delete(`/api/admin/odds/${odd.id}`);
-
-      await loadData();
-    } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-          "Failed to delete odd."
-      );
-    }
   }
 
   return (
     <div className="page">
-      <main className="container" style={{ padding: "40px 0" }}>
-        <h1>Manage Odds</h1>
-        <p>Create and manage individual betting selections.</p>
+      <main
+        className="container"
+        style={{
+          padding: "35px 20px 80px",
+          maxWidth: "1100px",
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            background:
+              "linear-gradient(135deg, #111827, #1d4ed8, #7c3aed)",
+            color: "white",
+            borderRadius: "18px",
+            padding: "28px",
+            marginBottom: "25px",
+            boxShadow: "0 10px 30px rgba(0,0,0,.15)",
+          }}
+        >
+          <h1 style={{ margin: 0 }}>
+            ⚽ Odds Management
+          </h1>
+
+          <p style={{ marginBottom: 0, opacity: 0.9 }}>
+            Select a match, manage its markets and update
+            the odds displayed to users.
+          </p>
+        </div>
 
         {error && (
           <div
             style={{
-              margin: "20px 0",
-              padding: "12px",
-              border: "1px solid #dc2626",
-              borderRadius: "8px",
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "14px 18px",
+              borderRadius: "10px",
+              marginBottom: "18px",
+              fontWeight: 600,
             }}
           >
-            {error}
+            ❌ {error}
           </div>
         )}
 
-        <form
-          onSubmit={createOdd}
+        {message && (
+          <div
+            style={{
+              background: "#dcfce7",
+              color: "#166534",
+              padding: "14px 18px",
+              borderRadius: "10px",
+              marginBottom: "18px",
+              fontWeight: 600,
+            }}
+          >
+            ✅ {message}
+          </div>
+        )}
+
+        <section
           style={{
-            marginTop: "30px",
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px",
+            background: "white",
+            borderRadius: "16px",
+            padding: "22px",
+            marginBottom: "25px",
+            boxShadow: "0 4px 15px rgba(0,0,0,.08)",
           }}
         >
-          <h2>Create Odd</h2>
+          <label
+            style={{
+              display: "block",
+              fontWeight: 800,
+              marginBottom: "10px",
+            }}
+          >
+            SELECT MATCH
+          </label>
 
-          <div style={{ display: "grid", gap: "12px" }}>
-            <select
-              name="market_id"
-              value={form.market_id}
-              onChange={handleChange}
-            >
-              <option value="">Select market</option>
+          <select
+            value={selectedMatch}
+            onChange={(event) => {
+              setSelectedMatch(event.target.value);
+              setMessage("");
+              setError("");
+            }}
+            style={{
+              width: "100%",
+              padding: "14px",
+              borderRadius: "10px",
+              border: "2px solid #dbeafe",
+              fontSize: "16px",
+              fontWeight: 600,
+            }}
+          >
+            {matches.length === 0 && (
+              <option value="">
+                No matches available
+              </option>
+            )}
 
-              {markets.map((market) => (
-                <option key={market.id} value={market.id}>
-                  #{market.id} — {market.name} — Match #
-                  {market.match_id}
-                  {!market.is_active ? " (Inactive)" : ""}
+            {matches.map((item) => {
+              const home =
+                teamMap[item.home_team_id]?.name ||
+                `Team #${item.home_team_id}`;
+
+              const away =
+                teamMap[item.away_team_id]?.name ||
+                `Team #${item.away_team_id}`;
+
+              return (
+                <option
+                  key={item.id}
+                  value={item.id}
+                >
+                  {home} vs {away} — Match #{item.id}
                 </option>
-              ))}
-            </select>
+              );
+            })}
+          </select>
+        </section>
 
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Odd name e.g. Home Win"
-            />
-
-            <input
-              name="value"
-              type="number"
-              step="0.01"
-              min="1.01"
-              value={form.value}
-              onChange={handleChange}
-              placeholder="Odd value e.g. 2.50"
-            />
-
-            <button type="submit" disabled={saving}>
-              {saving ? "Creating..." : "Create Odd"}
-            </button>
-          </div>
-        </form>
-
-        <section style={{ marginTop: "30px" }}>
-          <h2>Existing Odds</h2>
-
-          {loading ? (
-            <p>Loading odds...</p>
-          ) : odds.length === 0 ? (
-            <p>No odds found.</p>
-          ) : (
-            <div style={{ display: "grid", gap: "12px" }}>
-              {odds.map((odd) => (
+        {match && (
+          <section
+            style={{
+              background:
+                "linear-gradient(135deg, #eff6ff, #f5f3ff)",
+              borderRadius: "16px",
+              padding: "24px",
+              marginBottom: "25px",
+              border: "1px solid #dbeafe",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "15px",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
                 <div
-                  key={odd.id}
                   style={{
-                    padding: "16px",
-                    border: "1px solid #ddd",
-                    borderRadius: "10px",
+                    color: "#64748b",
+                    fontSize: "13px",
+                    fontWeight: 700,
                   }}
                 >
-                  <strong>{odd.name}</strong>
+                  MATCH #{match.id}
+                </div>
 
-                  <div>
-                    Odd #{odd.id} · Market #{odd.market_id}
-                  </div>
+                <h2 style={{ margin: "5px 0" }}>
+                  {teamMap[match.home_team_id]?.name ||
+                    `Team #${match.home_team_id}`}
+                  {"  "}
+                  <span style={{ color: "#64748b" }}>
+                    VS
+                  </span>
+                  {"  "}
+                  {teamMap[match.away_team_id]?.name ||
+                    `Team #${match.away_team_id}`}
+                </h2>
 
-                  <div>
-                    Value: <strong>{Number(odd.value).toFixed(2)}</strong>
-                  </div>
+                <div
+                  style={{
+                    color: "#475569",
+                    fontWeight: 600,
+                  }}
+                >
+                  Status: {match.status} ·{" "}
+                  {match.is_betting_open
+                    ? "🟢 Betting Open"
+                    : "🔴 Betting Closed"}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
-                  <div>
-                    Status:{" "}
-                    {odd.is_active ? "Active" : "Inactive"}
+        {!match ? (
+          <div
+            style={{
+              background: "white",
+              padding: "40px",
+              borderRadius: "16px",
+              textAlign: "center",
+            }}
+          >
+            No match selected.
+          </div>
+        ) : matchMarkets.length === 0 ? (
+          <div
+            style={{
+              background: "white",
+              padding: "40px",
+              borderRadius: "16px",
+              textAlign: "center",
+              boxShadow: "0 4px 15px rgba(0,0,0,.06)",
+            }}
+          >
+            <h2>No markets yet</h2>
+            <p>
+              Create markets for this match first.
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: "20px",
+            }}
+          >
+            {matchMarkets.map((market) => {
+              const marketOdds = matchOdds(market.id);
+
+              return (
+                <section
+                  key={market.id}
+                  style={{
+                    background: "white",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    boxShadow:
+                      "0 5px 18px rgba(0,0,0,.08)",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <div
+                    style={{
+                      background:
+                        "linear-gradient(90deg, #172554, #312e81)",
+                      color: "white",
+                      padding: "17px 20px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    <div>
+                      <strong style={{ fontSize: "18px" }}>
+                        {market.name}
+                      </strong>
+
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          opacity: 0.8,
+                          marginTop: "3px",
+                        }}
+                      >
+                        {market.market_type} · Market #
+                        {market.id}
+                      </div>
+                    </div>
+
+                    <span>
+                      {market.is_active
+                        ? "🟢 ACTIVE"
+                        : "🔴 INACTIVE"}
+                    </span>
                   </div>
 
                   <div
                     style={{
-                      display: "flex",
+                      padding: "15px",
+                      display: "grid",
                       gap: "10px",
-                      marginTop: "10px",
                     }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => toggleOdd(odd)}
-                    >
-                      {odd.is_active ? "Deactivate" : "Activate"}
-                    </button>
+                    {marketOdds.length === 0 ? (
+                      <p
+                        style={{
+                          color: "#64748b",
+                          margin: "10px 0",
+                        }}
+                      >
+                        No odds in this market.
+                      </p>
+                    ) : (
+                      marketOdds.map((odd) => (
+                        <div
+                          key={odd.id}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "1fr 150px auto auto",
+                            gap: "10px",
+                            alignItems: "center",
+                            padding: "13px",
+                            borderRadius: "10px",
+                            background: odd.is_active
+                              ? "#f8fafc"
+                              : "#f1f5f9",
+                            border:
+                              "1px solid #e2e8f0",
+                          }}
+                        >
+                          <div>
+                            <strong>
+                              {odd.name}
+                            </strong>
 
-                    <button
-                      type="button"
-                      onClick={() => deleteOdd(odd)}
-                    >
-                      Delete
-                    </button>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#64748b",
+                              }}
+                            >
+                              Odd #{odd.id}
+                            </div>
+                          </div>
+
+                          <input
+                            type="number"
+                            min="1.01"
+                            step="0.01"
+                            value={getOddValue(odd)}
+                            onChange={(event) =>
+                              updateEditedValue(
+                                odd.id,
+                                event.target.value
+                              )
+                            }
+                            style={{
+                              width: "100%",
+                              padding: "10px",
+                              borderRadius: "8px",
+                              border: "2px solid #cbd5e1",
+                              fontSize: "17px",
+                              fontWeight: 800,
+                            }}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => saveOdd(odd)}
+                            disabled={
+                              saving === odd.id
+                            }
+                            style={{
+                              padding: "10px 16px",
+                              border: 0,
+                              borderRadius: "8px",
+                              background: "#2563eb",
+                              color: "white",
+                              fontWeight: 800,
+                              cursor: "pointer",
+                            }}
+                          >
+                            {saving === odd.id
+                              ? "Saving..."
+                              : "💾 Save"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleOdd(odd)
+                            }
+                            style={{
+                              padding: "10px 14px",
+                              border: 0,
+                              borderRadius: "8px",
+                              background:
+                                odd.is_active
+                                  ? "#fee2e2"
+                                  : "#dcfce7",
+                              color:
+                                odd.is_active
+                                  ? "#991b1b"
+                                  : "#166534",
+                              fontWeight: 800,
+                              cursor: "pointer",
+                            }}
+                          >
+                            {odd.is_active
+                              ? "Disable"
+                              : "Enable"}
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+                </section>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );

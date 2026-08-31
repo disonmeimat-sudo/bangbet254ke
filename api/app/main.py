@@ -15,6 +15,7 @@ from app.models.market import Market
 from app.models.odd import Odd
 from app.models.wallet import Wallet
 from app.models.transaction import Transaction
+from app.models.bet import Bet
 
 from app.api.auth import router as auth_router
 from app.api.leagues import router as leagues_router
@@ -24,6 +25,7 @@ from app.api.public_api.matches import router as public_matches_router
 from app.api.admin.transactions import router as admin_transactions_router
 from app.api.admin.markets import router as admin_markets_router
 from app.api.admin.odds import router as admin_odds_router
+from app.api.admin.users import router as admin_users_router
 from app.api.public_api.wallet import router as wallet_router
 from app.api.public_api.transactions import router as transactions_router
 from app.api.public_api.palpluss import router as palpluss_router
@@ -64,6 +66,7 @@ app.include_router(matches_router)
 app.include_router(admin_transactions_router)
 app.include_router(admin_markets_router)
 app.include_router(admin_odds_router)
+app.include_router(admin_users_router)
 
 # Public
 app.include_router(public_matches_router)
