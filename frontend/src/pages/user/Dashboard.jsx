@@ -27,18 +27,18 @@ function normalizeMatch(match) {
       },
 
     home_team:
-      match.home_team ||
-      match.home_team_name ||
-      {
-        name: match.home_team_name || "Home",
-      },
+      typeof match.home_team === "string"
+        ? match.home_team
+        : match.home_team?.name ||
+          match.home_team_name ||
+          "Home",
 
     away_team:
-      match.away_team ||
-      match.away_team_name ||
-      {
-        name: match.away_team_name || "Away",
-      },
+      typeof match.away_team === "string"
+        ? match.away_team
+        : match.away_team?.name ||
+          match.away_team_name ||
+          "Away",
 
     home_score: Number(match.home_score ?? 0),
     away_score: Number(match.away_score ?? 0),
