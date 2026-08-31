@@ -1,12 +1,6 @@
 {
-  "version": 2,
   "buildCommand": "./build.sh",
   "outputDirectory": "frontend/dist",
-  "functions": {
-    "api/index.py": {
-      "includeFiles": "backend/**"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
