@@ -1,12 +1,10 @@
 import sys
 from pathlib import Path
 
-# Put the deployed backend package on Python's import path.
-ROOT = Path(__file__).resolve().parents[1]
-BACKEND = ROOT / "backend"
+API_DIR = Path(__file__).resolve().parent
 
-if str(BACKEND) not in sys.path:
-    sys.path.insert(0, str(BACKEND))
+if str(API_DIR) not in sys.path:
+    sys.path.insert(0, str(API_DIR))
 
 from app.main import app
 
