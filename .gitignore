@@ -24,3 +24,6 @@ frontend/dist/
 .vercel
 .env*
 
+
+# Local secrets
+.env

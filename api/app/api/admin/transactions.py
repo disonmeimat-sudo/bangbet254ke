@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -12,7 +10,6 @@ from app.schemas.transaction import (
     TransactionAdminUpdate,
     TransactionResponse,
 )
-from app.services.wallet import credit_wallet, debit_wallet
 
 
 router = APIRouter(
@@ -74,7 +71,9 @@ def get_pending_transactions(
 ):
     return (
         db.query(Transaction)
-        .filter(Transaction.status == "pending")
+        .filter(
+            Transaction.status == "pending"
+        )
         .order_by(Transaction.created_at.asc())
         .all()
     )
@@ -138,34 +137,142 @@ def update_transaction(
             detail="Wallet not found",
         )
 
-    # Deposit approval
-    if (
-        transaction.transaction_type == "deposit"
-        and new_status == "approved"
-    ):
-        credit_wallet(
-            db=db,
-            wallet=wallet,
-            amount=transaction.amount,
+    # ============================================================
+    # DEPOSIT
+    # ============================================================
+
+    if transaction.transaction_type == "deposit":
+
+        if new_status == "approved":
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Deposits are approved automatically "
+                    "through the PalPluss webhook."
+                ),
+            )
+
+        transaction.status = new_status
+
+        if data.description is not None:
+            transaction.description = data.description
+
+        db.commit()
+        db.refresh(transaction)
+
+        return transaction
+
+    # ============================================================
+    # WITHDRAWAL
+    # ============================================================
+
+    if transaction.transaction_type == "withdrawal":
+
+        if new_status in {"rejected", "cancelled"}:
+            transaction.status = new_status
+
+            if data.description is not None:
+                transaction.description = data.description
+            else:
+                transaction.description = (
+                    "Withdrawal rejected/cancelled by administrator."
+                )
+
+            db.commit()
+            db.refresh(transaction)
+
+            return transaction
+
+        # --------------------------------------------------------
+        # ADMIN APPROVES WITHDRAWAL
+        # --------------------------------------------------------
+
+        user = db.get(
+            User,
+            transaction.user_id,
         )
 
-    # Withdrawal approval
-    elif (
-        transaction.transaction_type == "withdrawal"
-        and new_status == "approved"
-    ):
-        debit_wallet(
-            db=db,
-            wallet=wallet,
-            amount=transaction.amount,
+        if not user or not user.phone:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "User does not have a valid phone number "
+                    "for the B2C payout."
+                ),
+            )
+
+        # Check the complete amount that will eventually be
+        # deducted from the wallet.
+        total_debit = transaction.total_debit
+
+        if wallet.balance < total_debit:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "User no longer has sufficient wallet "
+                    "balance for this withdrawal and fee."
+                ),
+            )
+
+        from app.services.palpluss import initiate_b2c_payout
+
+        try:
+            payout = initiate_b2c_payout(
+                amount=float(transaction.amount),
+                phone=user.phone.strip(),
+                reference=transaction.reference,
+            )
+
+        except Exception as exc:
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    f"Unable to initiate PalPluss payout: {exc}"
+                ),
+            )
+
+        provider_transaction_id = payout.get(
+            "transactionId"
         )
 
-    transaction.status = new_status
+        if not provider_transaction_id:
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    "PalPluss did not return a payout "
+                    "transaction ID."
+                ),
+            )
 
-    if data.description is not None:
-        transaction.description = data.description
+        provider_status = str(
+            payout.get("status") or ""
+        ).lower()
 
-    db.commit()
-    db.refresh(transaction)
+        transaction.provider_transaction_id = (
+            provider_transaction_id
+        )
 
-    return transaction
+        # The B2C response means the payout was accepted/
+        # initiated. Final wallet debit happens through
+        # the PalPluss webhook.
+        transaction.status = "processing"
+
+        transaction.description = (
+            f"Withdrawal approved by admin. "
+            f"KSh {transaction.amount:,.2f} payout initiated. "
+            f"Withdrawal fee: KSh {transaction.fee:,.2f}. "
+            f"PalPluss status: {provider_status or 'unknown'}."
+        )
+
+        if data.description is not None:
+            transaction.description = data.description
+
+        db.commit()
+        db.refresh(transaction)
+
+        return transaction
+
+    raise HTTPException(
+        status_code=400,
+        detail="Unsupported transaction type.",
+    )

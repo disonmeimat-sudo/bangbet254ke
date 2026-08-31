@@ -26,6 +26,7 @@ from app.api.admin.markets import router as admin_markets_router
 from app.api.admin.odds import router as admin_odds_router
 from app.api.public_api.wallet import router as wallet_router
 from app.api.public_api.transactions import router as transactions_router
+from app.api.public_api.palpluss import router as palpluss_router
 
 
 
@@ -68,6 +69,7 @@ app.include_router(admin_odds_router)
 app.include_router(public_matches_router)
 app.include_router(wallet_router)
 app.include_router(transactions_router)
+app.include_router(palpluss_router)
 
 
 @app.get("/")

@@ -40,13 +40,35 @@ class Transaction(Base):
         index=True,
     )
 
+    # Amount the user wants to receive.
     amount: Mapped[Decimal] = mapped_column(
         Numeric(14, 2),
         nullable=False,
     )
 
+    # Company withdrawal fee.
+    fee: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+
+    # amount + fee
+    total_debit: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+
     reference: Mapped[str | None] = mapped_column(
         String(100),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
+
+    provider_transaction_id: Mapped[str | None] = mapped_column(
+        String(150),
         unique=True,
         nullable=True,
         index=True,
