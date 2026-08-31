@@ -9,7 +9,6 @@ export async function loginUser(data) {
   console.log("LOGIN REQUEST:", {
     phone: data.phone,
     passwordLength: data.password?.length,
-    apiUrl: import.meta.env.VITE_API_URL,
   });
 
   const response = await api.post("/api/auth/login", data);

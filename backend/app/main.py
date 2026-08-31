@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
@@ -28,6 +30,9 @@ from app.api.public.transactions import router as transactions_router
 
 # Create missing database tables.
 Base.metadata.create_all(bind=engine)
+
+# Built React/Vite frontend.
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 
 app = FastAPI(
@@ -69,11 +74,31 @@ app.include_router(transactions_router)
 
 @app.get("/")
 def root():
+    index_file = FRONTEND_DIST / "index.html"
+
+    if index_file.exists():
+        return FileResponse(index_file)
+
     return {
         "message": "Welcome to BangBet254 API",
         "status": "online",
         "version": "1.0.0",
     }
+
+
+@app.get("/assets/{path:path}")
+def frontend_assets(path: str):
+    return FileResponse(FRONTEND_DIST / "assets" / path)
+
+
+@app.get("/favicon.svg")
+def favicon():
+    return FileResponse(FRONTEND_DIST / "favicon.svg")
+
+
+@app.get("/icons.svg")
+def icons():
+    return FileResponse(FRONTEND_DIST / "icons.svg")
 
 
 @app.get("/health")
