@@ -7,31 +7,81 @@ export default function BetSlip() {
     removeSelection,
     clearSelections,
     placeBet,
+    walletBalance,
+    totalOdds,
+    slipOpen,
+    setSlipOpen,
+    placingBet,
+    betError,
+    betSuccess,
   } = useBetSlip();
 
   const [stake, setStake] = useState("");
 
-  const totalOdds = selections.reduce(
-    (total, item) => total * Number(item.odds || 1),
-    1
-  );
-
   const possibleWin =
-    Number(stake || 0) * totalOdds;
+    Number(stake || 0) * Number(totalOdds || 1);
+
+  // Floating YOUR BET button.
+  if (!slipOpen) {
+    return (
+      <button
+        type="button"
+        className="bb-floating-bet"
+        onClick={() => setSlipOpen(true)}
+      >
+        <span className="bb-floating-bet-icon">🎟️</span>
+
+        <span className="bb-floating-bet-info">
+          <strong>YOUR BET</strong>
+          <small>
+            {selections.length} selection
+            {selections.length === 1 ? "" : "s"}
+          </small>
+        </span>
+
+        <span className="bb-floating-bet-win">
+          <small>Win</small>
+          <strong>
+            KSh{" "}
+            {possibleWin.toLocaleString("en-KE", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+          </strong>
+        </span>
+
+        <span className="bb-floating-arrow">⌃</span>
+      </button>
+    );
+  }
 
   return (
-    <div className="bb-betslip">
+    <div className="bb-betslip bb-betslip-floating">
       <div className="bb-betslip-header">
         <div>
-          <strong>BETSLIP</strong>
-          <span>{selections.length} selection(s)</span>
+          <strong>YOUR BET</strong>
+          <span>
+            {selections.length} selection
+            {selections.length === 1 ? "" : "s"}
+          </span>
         </div>
 
-        {selections.length > 0 && (
-          <button onClick={clearSelections}>
-            Clear
+        <div className="bb-betslip-actions">
+          {selections.length > 0 && (
+            <button type="button" onClick={clearSelections}>
+              Clear
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="bb-betslip-close"
+            onClick={() => setSlipOpen(false)}
+            aria-label="Close betslip"
+          >
+            ×
           </button>
-        )}
+        </div>
       </div>
 
       {selections.length === 0 ? (
@@ -41,8 +91,7 @@ export default function BetSlip() {
           <strong>Your betslip is empty</strong>
 
           <p>
-            Click on any odds to add a selection
-            to your betslip.
+            Click on any odds to add a selection.
           </p>
         </div>
       ) : (
@@ -69,6 +118,7 @@ export default function BetSlip() {
                 </strong>
 
                 <button
+                  type="button"
                   className="bb-remove-bet"
                   onClick={() =>
                     removeSelection(selection.match_id)
@@ -85,7 +135,21 @@ export default function BetSlip() {
             <div>
               <span>Total Odds</span>
               <strong>
-                {totalOdds.toFixed(2)}
+                {Number(totalOdds).toFixed(2)}
+              </strong>
+            </div>
+
+            <div>
+              <span>Wallet Balance</span>
+              <strong>
+                KSh{" "}
+                {Number(walletBalance ?? 0).toLocaleString(
+                  "en-KE",
+                  {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }
+                )}
               </strong>
             </div>
 
@@ -98,43 +162,61 @@ export default function BetSlip() {
                 <input
                   type="number"
                   min="1"
+                  step="1"
                   placeholder="0"
                   value={stake}
-                  onChange={(event) =>
-                    setStake(event.target.value)
-                  }
+                  disabled={placingBet}
+                  onChange={(event) => {
+                    setStake(event.target.value);
+                  }}
                 />
               </div>
             </label>
 
             <div>
               <span>Possible Win</span>
+
               <strong>
                 KSh{" "}
-                {possibleWin.toLocaleString(
-                  "en-KE",
-                  {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }
-                )}
+                {possibleWin.toLocaleString("en-KE", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </strong>
             </div>
           </div>
 
-          <button
-            className="bb-place-bet"
-            disabled={!stake || Number(stake) <= 0}
-            onClick={() => {
-              const placed = placeBet(stake);
+          {betError && (
+            <div className="bb-bet-error">
+              {betError}
+            </div>
+          )}
 
-              if (placed) {
+          {betSuccess && (
+            <div className="bb-bet-success">
+              {betSuccess}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="bb-place-bet"
+            disabled={
+              placingBet ||
+              !stake ||
+              Number(stake) <= 0
+            }
+            onClick={async () => {
+              const bet = await placeBet(stake);
+
+              if (bet) {
                 setStake("");
-                alert("Bet placed successfully!");
               }
             }}
           >
-            Place Bet
+            {placingBet
+              ? "PLACING BET..."
+              : "PLACE BET"}
           </button>
         </>
       )}

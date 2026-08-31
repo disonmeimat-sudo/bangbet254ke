@@ -28,6 +28,7 @@ from app.api.admin.odds import router as admin_odds_router
 from app.api.admin.users import router as admin_users_router
 from app.api.public_api.wallet import router as wallet_router
 from app.api.public_api.transactions import router as transactions_router
+from app.api.public_api.bets import router as bets_router
 from app.api.public_api.palpluss import router as palpluss_router
 
 
@@ -72,6 +73,7 @@ app.include_router(admin_users_router)
 app.include_router(public_matches_router)
 app.include_router(wallet_router)
 app.include_router(transactions_router)
+app.include_router(bets_router)
 app.include_router(palpluss_router)
 
 

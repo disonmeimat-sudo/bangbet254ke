@@ -8,7 +8,6 @@ from app.api.auth import get_current_user
 from app.core.database import get_db
 from app.models.transaction import Transaction
 from app.models.user import User
-from app.models.wallet import Wallet
 from app.schemas.transaction import (
     DepositCreate,
     WithdrawalCreate,
@@ -26,6 +25,42 @@ router = APIRouter(
 )
 
 
+def clean_phone(phone: str) -> str:
+    phone = str(phone or "").strip()
+
+    if not phone:
+        raise HTTPException(
+            status_code=400,
+            detail="M-Pesa phone number is required.",
+        )
+
+    # Accept common Kenyan formats:
+    # 0712345678
+    # 0112345678
+    # 254712345678
+    # +254712345678
+    if phone.startswith("+"):
+        phone = phone[1:]
+
+    if phone.startswith("0"):
+        phone = "254" + phone[1:]
+    elif phone.startswith("254"):
+        pass
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Enter a valid Kenyan M-Pesa number.",
+        )
+
+    if len(phone) != 12 or not phone.isdigit():
+        raise HTTPException(
+            status_code=400,
+            detail="Enter a valid Kenyan M-Pesa number.",
+        )
+
+    return phone
+
+
 @router.post(
     "/deposit",
     response_model=TransactionResponse,
@@ -41,19 +76,8 @@ def create_deposit(
         user_id=current_user.id,
     )
 
-    # Use the registered account phone unless another phone
-    # is eventually added to the deposit form.
-    phone = current_user.phone.strip()
+    phone = clean_phone(data.phone_number)
 
-    if not phone:
-        raise HTTPException(
-            status_code=400,
-            detail="Your account does not have a phone number.",
-        )
-
-    # Our own unique reference is sent to PalPluss as
-    # accountReference. The same reference comes back in
-    # the webhook, allowing us to identify this transaction.
     reference = f"BBDEP-{uuid4().hex[:20].upper()}"
 
     try:
@@ -82,10 +106,16 @@ def create_deposit(
         transaction_type="deposit",
         status="pending",
         amount=data.amount,
+        fee=Decimal("0.00"),
+        total_debit=Decimal("0.00"),
         reference=reference,
         provider_transaction_id=provider_transaction_id,
         payment_method="mpesa_stk",
-        description="M-Pesa STK Push initiated. Awaiting payment.",
+        phone_number=phone,
+        description=(
+            f"M-Pesa STK Push sent to {phone}. "
+            "Awaiting payment."
+        ),
     )
 
     db.add(transaction)
@@ -110,11 +140,7 @@ def create_withdrawal(
         user_id=current_user.id,
     )
 
-    if not current_user.phone or not current_user.phone.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="Your account does not have a phone number.",
-        )
+    phone = clean_phone(data.phone_number)
 
     try:
         fee, total_debit = calculate_withdrawal(data.amount)
@@ -146,9 +172,10 @@ def create_withdrawal(
         total_debit=total_debit,
         reference=reference,
         payment_method="mpesa_b2c",
+        phone_number=phone,
         description=(
             f"Withdrawal request pending admin approval. "
-            f"Withdrawal KSh {data.amount:,.2f}; "
+            f"KSh {data.amount:,.2f} to {phone}; "
             f"fee KSh {fee:,.2f}."
         ),
     )

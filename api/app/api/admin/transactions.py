@@ -219,7 +219,7 @@ def update_transaction(
         try:
             payout = initiate_b2c_payout(
                 amount=float(transaction.amount),
-                phone=user.phone.strip(),
+                phone=transaction.phone_number or user.phone.strip(),
                 reference=transaction.reference,
             )
 

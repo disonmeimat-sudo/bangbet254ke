@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, Numeric, String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 
@@ -10,6 +11,7 @@ class Bet(Base):
     __tablename__ = "bets"
 
     id: Mapped[int] = mapped_column(
+        Integer,
         primary_key=True,
         index=True,
     )
@@ -20,18 +22,18 @@ class Bet(Base):
         index=True,
     )
 
-    stake: Mapped[float] = mapped_column(
-        Float,
+    stake: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
         nullable=False,
     )
 
-    total_odds: Mapped[float] = mapped_column(
-        Float,
+    total_odds: Mapped[Decimal] = mapped_column(
+        Numeric(14, 4),
         nullable=False,
     )
 
-    potential_win: Mapped[float] = mapped_column(
-        Float,
+    potential_win: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
         nullable=False,
     )
 
@@ -40,6 +42,12 @@ class Bet(Base):
         default="pending",
         nullable=False,
         index=True,
+    )
+
+    selections: Mapped[list] = mapped_column(
+        JSON,
+        nullable=False,
+        default=list,
     )
 
     created_at: Mapped[datetime] = mapped_column(

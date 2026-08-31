@@ -24,6 +24,7 @@ def initiate_stk(
             phone=phone,
             account_reference=account_reference,
             transaction_desc="BangBet254 Wallet Deposit",
+            channel_id=settings.palpluss_channel_id or None,
             callback_url=settings.palpluss_callback_url or None,
         )
 
@@ -58,6 +59,7 @@ def initiate_b2c_payout(
             currency="KES",
             reference=reference,
             description="BangBet254 Wallet Withdrawal",
+            channel_id=settings.palpluss_channel_id or None,
             callback_url=settings.palpluss_callback_url or None,
             idempotency_key=reference,
         )

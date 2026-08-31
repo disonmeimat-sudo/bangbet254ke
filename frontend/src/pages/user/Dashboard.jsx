@@ -981,7 +981,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/wallet")
+                  navigate("/wallet?action=deposit")
                 }
               >
                 ➕ Deposit
@@ -990,7 +990,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/wallet")
+                  navigate("/wallet?action=withdraw")
                 }
               >
                 ↗ Withdraw

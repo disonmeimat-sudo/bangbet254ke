@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     database_url: str
 
     palpluss_api_key: str = ""
+    palpluss_channel_id: str = ""
     palpluss_base_url: str = "https://api.palpluss.com"
     palpluss_timeout: float = 30.0
     palpluss_callback_url: str = ""

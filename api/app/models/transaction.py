@@ -79,6 +79,14 @@ class Transaction(Base):
         nullable=True,
     )
 
+    # M-Pesa number used for this transaction.
+    # For deposits: number receiving the STK Push.
+    # For withdrawals: number receiving the B2C payout.
+    phone_number: Mapped[str | None] = mapped_column(
+        String(30),
+        nullable=True,
+    )
+
     description: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
