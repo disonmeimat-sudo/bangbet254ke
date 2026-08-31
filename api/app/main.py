@@ -20,12 +20,12 @@ from app.api.auth import router as auth_router
 from app.api.leagues import router as leagues_router
 from app.api.teams import router as teams_router
 from app.api.matches import router as matches_router
-from app.api.public.matches import router as public_matches_router
+from app.api.public_api.matches import router as public_matches_router
 from app.api.admin.transactions import router as admin_transactions_router
 from app.api.admin.markets import router as admin_markets_router
 from app.api.admin.odds import router as admin_odds_router
-from app.api.public.wallet import router as wallet_router
-from app.api.public.transactions import router as transactions_router
+from app.api.public_api.wallet import router as wallet_router
+from app.api.public_api.transactions import router as transactions_router
 
 
 
