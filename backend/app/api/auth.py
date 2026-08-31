@@ -124,15 +124,10 @@ def register(
             detail="Phone number is already registered",
         )
 
-    # The current database requires email and full_name.
-    # These are generated internally because signup now uses
-    # phone number only.
-    internal_email = f"{phone.replace('+', '')}@phone.bangbet254.local"
     internal_name = f"BangBet User {phone[-4:]}"
 
     user = User(
         full_name=internal_name,
-        email=internal_email,
         phone=phone,
         password_hash=hash_password(data.password),
         is_active=True,

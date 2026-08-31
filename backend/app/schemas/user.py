@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 
 
 class UserRegister(BaseModel):
@@ -14,7 +14,6 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     full_name: str
-    email: EmailStr
     phone: str | None
     is_active: bool
     is_admin: bool
