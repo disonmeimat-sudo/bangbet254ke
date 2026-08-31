@@ -7,3 +7,5 @@ pydantic-settings
 python-jose
 passlib
 bcrypt
+
+palpluss==0.1.0
