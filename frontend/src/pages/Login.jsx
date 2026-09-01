@@ -25,6 +25,17 @@ export default function Login() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+
+    if (!form.phone.trim()) {
+      setError("Please enter your phone number.");
+      return;
+    }
+
+    if (!form.password) {
+      setError("Please enter your password.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -50,203 +61,386 @@ export default function Login() {
   }
 
   return (
-    <div className="page">
-      <main
-        className="container"
-        style={{
-          minHeight: "75vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "60px 20px",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "440px",
-            padding: "32px",
-            borderRadius: "18px",
-            background: "#ffffff",
-            color: "#111827",
-            boxShadow: "0 15px 45px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h1
-            style={{
-              color: "#111827",
-              fontSize: "32px",
-              fontWeight: 800,
-              margin: "0 0 10px",
-            }}
-          >
-            Welcome back
-          </h1>
+    <div style={styles.page}>
+      <div style={styles.glowOne} />
+      <div style={styles.glowTwo} />
 
-          <p
-            style={{
-              color: "#4b5563",
-              fontSize: "16px",
-              margin: "0 0 28px",
-            }}
-          >
-            Login to your BangBet254 account.
-          </p>
+      <main style={styles.wrapper}>
+        <div style={styles.brand}>
+          <div style={styles.logo}>BB</div>
+
+          <div>
+            <div style={styles.brandName}>BangBet<span>254</span></div>
+            <div style={styles.brandTagline}>BET • WIN • WITHDRAW</div>
+          </div>
+        </div>
+
+        <section style={styles.card}>
+          <div style={styles.yellowBar} />
+
+          <div style={styles.cardHeader}>
+            <div style={styles.iconCircle}>🔐</div>
+
+            <h1 style={styles.title}>Welcome Back</h1>
+
+            <p style={styles.subtitle}>
+              Login to your BangBet254 account
+            </p>
+          </div>
 
           {error && (
-            <div
-              style={{
-                padding: "12px 14px",
-                marginBottom: "18px",
-                borderRadius: "10px",
-                background: "#fee2e2",
-                color: "#991b1b",
-                fontWeight: 600,
-              }}
-            >
-              {error}
+            <div style={styles.error}>
+              <span>⚠</span>
+              <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <label
-              htmlFor="login-phone"
-              style={labelStyle}
-            >
-              Phone number
+            <label htmlFor="login-phone" style={styles.label}>
+              Phone Number
             </label>
 
-            <input
-              id="login-phone"
-              type="tel"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="254700000000"
-              required
-              autoComplete="tel"
-              style={inputStyle}
-            />
+            <div style={styles.inputWrap}>
+              <span style={styles.inputIcon}>📱</span>
 
-            <label
-              htmlFor="login-password"
-              style={labelStyle}
-            >
+              <input
+                id="login-phone"
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="254700000000"
+                required
+                autoComplete="tel"
+                style={styles.input}
+              />
+            </div>
+
+            <label htmlFor="login-password" style={styles.label}>
               Password
             </label>
 
-            <div
-              style={{
-                position: "relative",
-                marginBottom: "22px",
-              }}
-            >
+            <div style={styles.inputWrap}>
+              <span style={styles.inputIcon}>🔒</span>
+
               <input
                 id="login-password"
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={form.password}
                 onChange={handleChange}
-                placeholder="Your password"
+                placeholder="Enter your password"
                 required
                 autoComplete="current-password"
                 style={{
-                  ...inputStyle,
-                  marginBottom: 0,
+                  ...styles.input,
                   paddingRight: "48px",
                 }}
               />
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowPassword(!showPassword)
-                }
+                onClick={() => setShowPassword(!showPassword)}
+                style={styles.passwordButton}
                 aria-label={
-                  showPassword
-                    ? "Hide password"
-                    : "Show password"
+                  showPassword ? "Hide password" : "Show password"
                 }
-                style={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  border: "none",
-                  background: "transparent",
-                  color: "#64748b",
-                  padding: "6px",
-                  fontSize: "18px",
-                  cursor: "pointer",
-                  lineHeight: 1,
-                }}
               >
-                {showPassword ? "🙈" : "👁️"}
+                {showPassword ? "🙈" : "👁"}
               </button>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              style={buttonStyle}
+              style={{
+                ...styles.submitButton,
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? "not-allowed" : "pointer",
+              }}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? (
+                <>
+                  <span style={styles.spinner}>⏳</span>
+                  Logging in...
+                </>
+              ) : (
+                <>
+                  LOGIN TO BANGBET
+                  <span style={styles.arrow}>→</span>
+                </>
+              )}
             </button>
           </form>
 
-          <p
-            style={{
-              marginTop: "24px",
-              textAlign: "center",
-              color: "#4b5563",
-            }}
-          >
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              style={{
-                color: "#111827",
-                fontWeight: 700,
-                textDecoration: "underline",
-              }}
-            >
-              Create one
-            </Link>
+          <div style={styles.divider}>
+            <span>NEW TO BANGBET254?</span>
+          </div>
+
+          <Link to="/register" style={styles.registerButton}>
+            CREATE FREE ACCOUNT
+          </Link>
+
+          <p style={styles.footerText}>
+            By continuing, you agree to use BangBet254 responsibly.
           </p>
-        </div>
+        </section>
       </main>
     </div>
   );
 }
 
-const labelStyle = {
-  display: "block",
-  color: "#111827",
-  fontWeight: 700,
-  marginBottom: "6px",
-};
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background:
+      "radial-gradient(circle at top, #292929 0%, #111111 45%, #050505 100%)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "30px 16px",
+    boxSizing: "border-box",
+    position: "relative",
+    overflow: "hidden",
+    fontFamily:
+      "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  },
 
-const inputStyle = {
-  width: "100%",
-  padding: "13px 14px",
-  margin: "0 0 18px",
-  borderRadius: "10px",
-  border: "1px solid #cbd5e1",
-  boxSizing: "border-box",
-  color: "#111827",
-  background: "#ffffff",
-  fontSize: "15px",
-  outline: "none",
-};
+  glowOne: {
+    position: "absolute",
+    width: "300px",
+    height: "300px",
+    borderRadius: "50%",
+    background: "rgba(255, 193, 7, 0.10)",
+    filter: "blur(80px)",
+    top: "-100px",
+    left: "-100px",
+  },
 
-const buttonStyle = {
-  width: "100%",
-  padding: "14px",
-  border: "none",
-  borderRadius: "10px",
-  cursor: "pointer",
-  fontWeight: 800,
-  fontSize: "15px",
-  background: "#111827",
-  color: "#ffffff",
+  glowTwo: {
+    position: "absolute",
+    width: "280px",
+    height: "280px",
+    borderRadius: "50%",
+    background: "rgba(255, 193, 7, 0.08)",
+    filter: "blur(80px)",
+    bottom: "-120px",
+    right: "-100px",
+  },
+
+  wrapper: {
+    width: "100%",
+    maxWidth: "430px",
+    position: "relative",
+    zIndex: 2,
+  },
+
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "12px",
+    marginBottom: "24px",
+  },
+
+  logo: {
+    width: "50px",
+    height: "50px",
+    borderRadius: "14px",
+    background: "#FFC107",
+    color: "#111111",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "18px",
+    fontWeight: 1000,
+    boxShadow: "0 8px 25px rgba(255,193,7,0.30)",
+  },
+
+  brandName: {
+    color: "#ffffff",
+    fontSize: "25px",
+    fontWeight: 900,
+    letterSpacing: "-1px",
+  },
+
+  brandTagline: {
+    color: "#FFC107",
+    fontSize: "9px",
+    fontWeight: 800,
+    letterSpacing: "2px",
+    marginTop: "2px",
+  },
+
+  card: {
+    background: "#ffffff",
+    borderRadius: "24px",
+    padding: "32px",
+    boxSizing: "border-box",
+    boxShadow: "0 25px 80px rgba(0,0,0,0.45)",
+    position: "relative",
+    overflow: "hidden",
+  },
+
+  yellowBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "5px",
+    background: "#FFC107",
+  },
+
+  cardHeader: {
+    textAlign: "center",
+    marginBottom: "28px",
+  },
+
+  iconCircle: {
+    width: "58px",
+    height: "58px",
+    margin: "0 auto 15px",
+    borderRadius: "50%",
+    background: "#FFF8E1",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "25px",
+  },
+
+  title: {
+    margin: 0,
+    color: "#111111",
+    fontSize: "29px",
+    fontWeight: 900,
+    letterSpacing: "-1px",
+  },
+
+  subtitle: {
+    margin: "8px 0 0",
+    color: "#737373",
+    fontSize: "14px",
+  },
+
+  error: {
+    display: "flex",
+    gap: "9px",
+    alignItems: "center",
+    padding: "12px 14px",
+    marginBottom: "20px",
+    borderRadius: "12px",
+    background: "#FEF2F2",
+    border: "1px solid #FECACA",
+    color: "#B91C1C",
+    fontSize: "13px",
+    fontWeight: 700,
+  },
+
+  label: {
+    display: "block",
+    color: "#222222",
+    fontSize: "13px",
+    fontWeight: 800,
+    marginBottom: "8px",
+  },
+
+  inputWrap: {
+    position: "relative",
+    marginBottom: "19px",
+  },
+
+  inputIcon: {
+    position: "absolute",
+    left: "14px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: "17px",
+    zIndex: 1,
+  },
+
+  input: {
+    width: "100%",
+    height: "52px",
+    boxSizing: "border-box",
+    border: "2px solid #E5E5E5",
+    borderRadius: "13px",
+    background: "#FAFAFA",
+    color: "#111111",
+    padding: "0 14px 0 45px",
+    fontSize: "15px",
+    outline: "none",
+  },
+
+  passwordButton: {
+    position: "absolute",
+    right: "10px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+    fontSize: "18px",
+    padding: "6px",
+  },
+
+  submitButton: {
+    width: "100%",
+    minHeight: "54px",
+    border: "none",
+    borderRadius: "13px",
+    background: "#FFC107",
+    color: "#111111",
+    fontSize: "14px",
+    fontWeight: 900,
+    letterSpacing: "0.4px",
+    boxShadow: "0 8px 22px rgba(255,193,7,0.28)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "9px",
+  },
+
+  spinner: {
+    fontSize: "15px",
+  },
+
+  arrow: {
+    fontSize: "20px",
+    fontWeight: 900,
+  },
+
+  divider: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    margin: "25px 0 15px",
+    color: "#999999",
+    fontSize: "10px",
+    fontWeight: 800,
+    letterSpacing: "1px",
+  },
+
+  registerButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "50px",
+    boxSizing: "border-box",
+    borderRadius: "13px",
+    border: "2px solid #FFC107",
+    background: "#FFFDF5",
+    color: "#111111",
+    textDecoration: "none",
+    fontSize: "13px",
+    fontWeight: 900,
+    letterSpacing: "0.4px",
+  },
+
+  footerText: {
+    textAlign: "center",
+    color: "#999999",
+    fontSize: "11px",
+    lineHeight: 1.5,
+    margin: "18px 0 0",
+  },
 };
