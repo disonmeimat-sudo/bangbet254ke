@@ -1139,7 +1139,6 @@ export default function Dashboard() {
           type="button"
           className="bb-mobile-floating-bet"
           onClick={() => {
-            setSlipOpen(true);
             setTab("win");
           }}
           aria-label={`Open bet slip with ${selections.length} selections`}
