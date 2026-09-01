@@ -3,78 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { useBetSlip } from "../context/BetSlipContext";
 import MatchCard from "../components/matches/MatchCard";
 import BetSlip from "../components/betting/BetSlip";
-
-const demoMatches = [
-  {
-    id: 1,
-    league: "Premier League",
-    time: "16:00",
-    home_team: "Chelsea",
-    away_team: "Brighton",
-    home_odds: "1.91",
-    draw_odds: "3.70",
-    away_odds: "4.10",
-  },
-  {
-    id: 2,
-    league: "Premier League",
-    time: "18:30",
-    home_team: "Arsenal",
-    away_team: "Aston Villa",
-    home_odds: "1.55",
-    draw_odds: "4.20",
-    away_odds: "5.80",
-  },
-  {
-    id: 3,
-    league: "La Liga",
-    time: "21:00",
-    home_team: "Barcelona",
-    away_team: "Sevilla",
-    home_odds: "1.42",
-    draw_odds: "4.80",
-    away_odds: "6.50",
-  },
-  {
-    id: 4,
-    league: "Serie A",
-    time: "20:45",
-    home_team: "Inter Milan",
-    away_team: "Roma",
-    home_odds: "1.68",
-    draw_odds: "3.90",
-    away_odds: "5.10",
-  },
-];
-
-const liveMatches = [
-  {
-    id: 101,
-    league: "Live • Premier League",
-    time: "72'",
-    home_team: "Liverpool",
-    away_team: "Newcastle",
-    home_score: 2,
-    away_score: 1,
-    home_odds: "1.35",
-    draw_odds: "4.50",
-    away_odds: "8.20",
-    live: true,
-  },
-  {
-    id: 102,
-    league: "Live • La Liga",
-    time: "58'",
-    home_team: "Real Madrid",
-    away_team: "Valencia",
-    home_score: 1,
-    away_score: 0,
-    home_odds: "1.28",
-    draw_odds: "5.20",
-    away_odds: "10.00",
-    live: true,
-  },
-];
+import { getPublicMatches } from "../api/matches";
+import { useEffect, useMemo, useState } from "react";
 
 function SportIcon({ icon, label }) {
   return (
@@ -89,6 +19,63 @@ export default function Home() {
   const { loading } = useAuth();
   const { selections = [] } = useBetSlip();
   const navigate = useNavigate();
+
+  const [matches, setMatches] = useState([]);
+  const [matchesLoading, setMatchesLoading] = useState(true);
+
+  async function loadMatches() {
+    try {
+      setMatchesLoading(true);
+
+      const data = await getPublicMatches();
+
+      setMatches(
+        Array.isArray(data)
+          ? data
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "BangBet254 public matches error:",
+        error
+      );
+      setMatches([]);
+    } finally {
+      setMatchesLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMatches();
+
+    const interval = setInterval(
+      loadMatches,
+      15000
+    );
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const upcomingMatches = useMemo(
+    () =>
+      matches.filter(
+        (match) =>
+          !match.is_live &&
+          match.is_betting_open !== false
+      ),
+    [matches]
+  );
+
+  const liveMatches = useMemo(
+    () =>
+      matches.filter(
+        (match) => match.is_live
+      ),
+    [matches]
+  );
+
+  const displayTopMatches =
+    upcomingMatches.slice(0, 12);
 
   if (loading) {
     return (
@@ -195,11 +182,30 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="bb-matches-grid">
-            {demoMatches.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
+          {matchesLoading ? (
+            <div className="empty-state">
+              <h2>Loading matches...</h2>
+              <p>
+                Getting the latest matches and odds.
+              </p>
+            </div>
+          ) : displayTopMatches.length === 0 ? (
+            <div className="empty-state">
+              <h2>No matches available</h2>
+              <p>
+                Matches created by the admin will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="bb-matches-grid">
+              {displayTopMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* LIVE */}
@@ -220,7 +226,11 @@ export default function Home() {
 
           <div className="bb-live-grid">
             {liveMatches.map((match) => (
-              <MatchCard key={match.id} match={match} live />
+              <MatchCard
+                key={match.id}
+                match={match}
+                live
+              />
             ))}
           </div>
         </section>
