@@ -3064,13 +3064,33 @@ a {
    ========================================================= */
 
 .bb-odds button.bb-odd-selected {
-  transform: translateY(-1px);
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #15803d !important;
   border-width: 2px;
-  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.18);
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 3px rgba(22, 163, 74, 0.22),
+    0 6px 14px rgba(22, 163, 74, 0.28);
+}
+
+.bb-odds button.bb-odd-selected small,
+.bb-odds button.bb-odd-selected strong {
+  color: #ffffff !important;
 }
 
 .bb-odds button.bb-odd-selected strong {
-  font-weight: 800;
+  font-weight: 900;
+}
+
+.bb-odds button.bb-odd-selected::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #ffffff;
 }
 
 /* =========================================================
