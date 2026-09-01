@@ -147,6 +147,16 @@ export default function Dashboard() {
     user?.available_balance ??
     0;
 
+  const [showBalance, setShowBalance] = useState(false);
+
+  const userPhone =
+    user?.phone ||
+    user?.phone_number ||
+    user?.phoneNumber ||
+    user?.mobile ||
+    user?.msisdn ||
+    "Phone number not available";
+
   function go(section) {
     setTab(section);
 
@@ -209,10 +219,15 @@ export default function Dashboard() {
                 </strong>
 
                 <small>
-                  KSh{" "}
-                  {Number(balance).toLocaleString(
-                    "en-KE"
-                  )}
+                  {showBalance
+                    ? `KSh ${Number(balance).toLocaleString(
+                        "en-KE",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}`
+                    : "KSh ***"}
                 </small>
               </span>
             </button>
@@ -965,10 +980,15 @@ export default function Dashboard() {
             </span>
 
             <strong>
-              KSh{" "}
-              {Number(
-                balance
-              ).toLocaleString()}
+              {showBalance
+                ? `KSh ${Number(balance).toLocaleString(
+                    "en-KE",
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }
+                  )}`
+                : "KSh ***"}
             </strong>
 
             <div className="bb-wallet-actions">
@@ -976,7 +996,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/wallet")
+                  setShowBalance((current) => !current)
                 }
               >
                 💰 Wallet
@@ -1008,29 +1028,27 @@ export default function Dashboard() {
 
             <button
               type="button"
-              onClick={() =>
-                navigate("/profile")
-              }
+              onClick={() => {}}
             >
-              <span>👤</span>
+              <span>📱</span>
 
               <div>
                 <strong>
-                  Profile
+                  Phone Number
                 </strong>
 
                 <small>
-                  Manage your account
+                  {userPhone}
                 </small>
               </div>
 
-              <b>›</b>
+              <b>✓</b>
             </button>
 
             <button
               type="button"
               onClick={() =>
-                navigate("/wallet")
+                setShowBalance((current) => !current)
               }
             >
               <span>💰</span>
@@ -1041,11 +1059,21 @@ export default function Dashboard() {
                 </strong>
 
                 <small>
-                  Deposit and withdraw
+                  {showBalance
+                    ? `KSh ${Number(balance).toLocaleString(
+                        "en-KE",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}`
+                    : "KSh ***"}
                 </small>
               </div>
 
-              <b>›</b>
+              <b>
+                {showBalance ? "−" : "+"}
+              </b>
             </button>
 
             <button
