@@ -3236,3 +3236,19 @@ a {
     border-color: #000000 !important;
   }
 }
+
+/* =========================
+   FULL-PAGE BETSLIP
+========================= */
+
+.bb-betslip-full-page {
+  position: static !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 650px;
+  margin: 0 auto;
+}

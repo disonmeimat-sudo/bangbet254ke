@@ -62,7 +62,11 @@ export default function BetSlip({ onOpenWin, fullPage = false }) {
   }
 
   return (
-    <div className="bb-betslip bb-betslip-floating">
+    <div
+      className={`bb-betslip ${
+        fullPage ? "bb-betslip-full-page" : "bb-betslip-floating"
+      }`}
+    >
       <div className="bb-betslip-header">
         <div>
           <strong>YOUR BET</strong>
