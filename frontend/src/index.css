@@ -3211,3 +3211,28 @@ a {
     font-size: 21px;
   }
 }
+
+/* =========================================================
+   MOBILE FLOATING BET BUTTON — YELLOW
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .bb-mobile-floating-bet {
+    background: #facc15 !important;
+    color: #000000 !important;
+    border-color: #ffffff !important;
+    box-shadow:
+      0 5px 18px rgba(0, 0, 0, 0.28),
+      0 0 0 3px rgba(250, 204, 21, 0.25);
+  }
+
+  .bb-mobile-floating-icon {
+    color: #000000 !important;
+  }
+
+  .bb-mobile-floating-count {
+    background: #facc15 !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
+  }
+}
