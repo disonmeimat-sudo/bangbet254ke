@@ -2,21 +2,18 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function Register() {
+export default function Login() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { login } = useAuth();
 
   const [form, setForm] = useState({
     phone: "",
     password: "",
   });
 
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function handleChange(event) {
     setForm({
@@ -29,55 +26,35 @@ export default function Register() {
     event.preventDefault();
     setError("");
 
-    const phone = form.phone.trim();
-
-    if (!phone) {
+    if (!form.phone.trim()) {
       setError("Please enter your phone number.");
       return;
     }
 
-    if (form.password.length < 8) {
-      setError("Your password must contain at least 8 characters.");
-      return;
-    }
-
-    if (form.password !== confirmPassword) {
-      setError("Your passwords do not match.");
-      return;
-    }
-
-    if (!termsAccepted) {
-      setError("Please accept the Terms & Conditions to continue.");
+    if (!form.password) {
+      setError("Please enter your password.");
       return;
     }
 
     setLoading(true);
 
     try {
-      await register({
-        phone,
+      const user = await login({
+        phone: form.phone.trim(),
         password: form.password,
-        terms_accepted: true,
-        terms_version: "2026-09-01",
       });
 
-      navigate("/dashboard");
-    } catch (err) {
-      const detail = err.response?.data?.detail;
-
-      if (Array.isArray(detail)) {
-        setError(
-          detail
-            .map((item) => item.msg || "Invalid input")
-            .join(", ")
-        );
+      if (user.is_admin) {
+        navigate("/admin");
       } else {
-        setError(
-          detail ||
-            err.message ||
-            "Unable to create your account. Please try again."
-        );
+        navigate("/dashboard");
       }
+    } catch (err) {
+      setError(
+        err.response?.data?.detail ||
+          err.message ||
+          "Login failed. Please check your phone number and password."
+      );
     } finally {
       setLoading(false);
     }
@@ -100,10 +77,15 @@ export default function Register() {
           </div>
 
           <div style={headingWrap}>
-            <h1 style={headingStyle}>Create your account</h1>
+            <div style={welcomeBadge}>
+              <span>👋</span>
+              Welcome back
+            </div>
+
+            <h1 style={headingStyle}>Login to your account</h1>
 
             <p style={subtitleStyle}>
-              Join BangBet254 and start your betting journey today.
+              Continue where you left off and enjoy the action.
             </p>
           </div>
 
@@ -115,7 +97,7 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <label htmlFor="register-phone" style={labelStyle}>
+            <label htmlFor="login-phone" style={labelStyle}>
               Phone number
             </label>
 
@@ -123,7 +105,7 @@ export default function Register() {
               <span style={inputIcon}>📱</span>
 
               <input
-                id="register-phone"
+                id="login-phone"
                 type="tel"
                 name="phone"
                 value={form.phone}
@@ -135,22 +117,26 @@ export default function Register() {
               />
             </div>
 
-            <label htmlFor="register-password" style={labelStyle}>
-              Password
-            </label>
+            <div style={passwordLabelRow}>
+              <label htmlFor="login-password" style={labelStyle}>
+                Password
+              </label>
+
+              <span style={passwordHint}>Keep it secure</span>
+            </div>
 
             <div style={inputWrap}>
               <span style={inputIcon}>🔒</span>
 
               <input
-                id="register-password"
+                id="login-password"
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={form.password}
                 onChange={handleChange}
-                placeholder="At least 8 characters"
+                placeholder="Enter your password"
                 required
-                autoComplete="new-password"
+                autoComplete="current-password"
                 style={{
                   ...inputWithIconStyle,
                   paddingRight: "52px",
@@ -169,68 +155,6 @@ export default function Register() {
               </button>
             </div>
 
-            <label htmlFor="confirm-password" style={labelStyle}>
-              Confirm password
-            </label>
-
-            <div style={inputWrap}>
-              <span style={inputIcon}>🔐</span>
-
-              <input
-                id="confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(event) =>
-                  setConfirmPassword(event.target.value)
-                }
-                placeholder="Repeat your password"
-                required
-                autoComplete="new-password"
-                style={{
-                  ...inputWithIconStyle,
-                  paddingRight: "52px",
-                }}
-              />
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowConfirmPassword(!showConfirmPassword)
-                }
-                style={passwordButtonStyle}
-                aria-label={
-                  showConfirmPassword
-                    ? "Hide password"
-                    : "Show password"
-                }
-              >
-                {showConfirmPassword ? "🙈" : "👁"}
-              </button>
-            </div>
-
-            <label style={termsStyle}>
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                onChange={(event) =>
-                  setTermsAccepted(event.target.checked)
-                }
-                style={checkboxStyle}
-              />
-
-              <span>
-                I agree to the{" "}
-                <a href="/terms" style={termsLinkStyle}>
-                  Terms & Conditions
-                </a>{" "}
-                and{" "}
-                <a href="/privacy" style={termsLinkStyle}>
-                  Privacy Policy
-                </a>
-                .
-              </span>
-            </label>
-
             <button
               type="submit"
               disabled={loading}
@@ -243,11 +167,11 @@ export default function Register() {
               {loading ? (
                 <>
                   <span style={spinnerStyle}></span>
-                  Creating account...
+                  Logging in...
                 </>
               ) : (
                 <>
-                  Create Account
+                  Login
                   <span style={arrowStyle}>→</span>
                 </>
               )}
@@ -256,17 +180,17 @@ export default function Register() {
 
           <div style={dividerStyle}>
             <span style={dividerLine}></span>
-            <span style={dividerText}>Already registered?</span>
+            <span style={dividerText}>New to BangBet254?</span>
             <span style={dividerLine}></span>
           </div>
 
-          <Link to="/login" style={secondaryButtonStyle}>
-            Login to your account
+          <Link to="/register" style={secondaryButtonStyle}>
+            Create a new account
           </Link>
 
           <div style={secureText}>
             <span>🔒</span>
-            <span>Your account information is securely protected.</span>
+            <span>Secure login • Your information is protected</span>
           </div>
         </section>
       </main>
@@ -334,7 +258,7 @@ const brandWrap = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
-  marginBottom: "30px",
+  marginBottom: "27px",
 };
 
 const brandIcon = {
@@ -368,6 +292,20 @@ const brandTagline = {
 
 const headingWrap = {
   marginBottom: "26px",
+};
+
+const welcomeBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "7px",
+  padding: "6px 10px",
+  borderRadius: "20px",
+  background: "rgba(34,197,94,0.08)",
+  border: "1px solid rgba(34,197,94,0.14)",
+  color: "#4ade80",
+  fontSize: "11px",
+  fontWeight: 800,
+  marginBottom: "12px",
 };
 
 const headingStyle = {
@@ -421,9 +359,21 @@ const labelStyle = {
   marginBottom: "8px",
 };
 
+const passwordLabelRow = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+};
+
+const passwordHint = {
+  color: "#475569",
+  fontSize: "10px",
+  marginBottom: "8px",
+};
+
 const inputWrap = {
   position: "relative",
-  marginBottom: "18px",
+  marginBottom: "20px",
 };
 
 const inputIcon = {
@@ -447,7 +397,6 @@ const inputWithIconStyle = {
   background: "#0c1915",
   color: "#ffffff",
   fontSize: "14px",
-  transition: "border-color 0.2s, box-shadow 0.2s",
 };
 
 const passwordButtonStyle = {
@@ -461,31 +410,6 @@ const passwordButtonStyle = {
   padding: "8px",
   cursor: "pointer",
   fontSize: "16px",
-};
-
-const termsStyle = {
-  display: "flex",
-  alignItems: "flex-start",
-  gap: "10px",
-  color: "#94a3b8",
-  fontSize: "12px",
-  lineHeight: 1.6,
-  margin: "4px 0 20px",
-  cursor: "pointer",
-};
-
-const checkboxStyle = {
-  width: "17px",
-  height: "17px",
-  marginTop: "1px",
-  accentColor: "#22c55e",
-  flexShrink: 0,
-};
-
-const termsLinkStyle = {
-  color: "#4ade80",
-  fontWeight: 700,
-  textDecoration: "none",
 };
 
 const buttonStyle = {

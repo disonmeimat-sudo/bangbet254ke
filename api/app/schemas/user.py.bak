@@ -1,11 +1,9 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class UserRegister(BaseModel):
     phone: str
-    password: str = Field(min_length=8)
-    terms_accepted: bool
-    terms_version: str = "2026-09-01"
+    password: str
 
 
 class UserLogin(BaseModel):
