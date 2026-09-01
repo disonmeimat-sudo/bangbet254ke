@@ -19,6 +19,16 @@ class Team(Base):
         nullable=False,
     )
 
+    short_name: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+    logo_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
     country: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
