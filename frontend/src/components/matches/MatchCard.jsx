@@ -20,6 +20,131 @@ export default function MatchCard({ match, live = false }) {
 
   const selections = betSlip?.selections || [];
 
+  /*
+   * The public API returns:
+   *
+   * match.markets[].odds[]
+   *
+   * Find the 1X2 / Match Result market first.
+   */
+  const markets = Array.isArray(match.markets)
+    ? match.markets
+    : [];
+
+  const resultMarket =
+    markets.find((market) => {
+      const name = String(
+        market.name || ""
+      ).toLowerCase();
+
+      const type = String(
+        market.market_type || ""
+      ).toLowerCase();
+
+      return (
+        type === "1x2" ||
+        type === "match_result" ||
+        type === "match result" ||
+        name === "1x2" ||
+        name.includes("match result")
+      );
+    }) || markets[0];
+
+  const marketOdds = Array.isArray(resultMarket?.odds)
+    ? resultMarket.odds.filter(
+        (odd) => odd && odd.is_active !== false
+      )
+    : [];
+
+  /*
+   * Match admin-created odds to HOME / DRAW / AWAY.
+   *
+   * This supports common names such as:
+   * Home, Draw, Away
+   * 1, X, 2
+   * Chelsea, Draw, Brighton
+   */
+  function findOdd(type) {
+    const normalizedHome = String(
+      homeTeamName || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const normalizedAway = String(
+      awayTeamName || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    return marketOdds.find((odd) => {
+      const name = String(
+        odd.name || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      if (type === "HOME") {
+        return (
+          name === "1" ||
+          name === "home" ||
+          name === normalizedHome ||
+          name.includes("home")
+        );
+      }
+
+      if (type === "DRAW") {
+        return (
+          name === "x" ||
+          name === "draw" ||
+          name.includes("draw")
+        );
+      }
+
+      if (type === "AWAY") {
+        return (
+          name === "2" ||
+          name === "away" ||
+          name === normalizedAway ||
+          name.includes("away")
+        );
+      }
+
+      return false;
+    });
+  }
+
+  const homeOdd = findOdd("HOME");
+  const drawOdd = findOdd("DRAW");
+  const awayOdd = findOdd("AWAY");
+
+  const homeOdds =
+    homeOdd?.value !== undefined
+      ? Number(homeOdd.value)
+      : null;
+
+  const drawOdds =
+    drawOdd?.value !== undefined
+      ? Number(drawOdd.value)
+      : null;
+
+  const awayOdds =
+    awayOdd?.value !== undefined
+      ? Number(awayOdd.value)
+      : null;
+
+  function formatOdd(value) {
+    if (
+      value === null ||
+      value === undefined ||
+      !Number.isFinite(Number(value))
+    ) {
+      return "—";
+    }
+
+    return Number(value).toFixed(2);
+  }
+
   function isSelected(type) {
     return selections.some(
       (item) =>
@@ -28,10 +153,11 @@ export default function MatchCard({ match, live = false }) {
     );
   }
 
-  function addBet(type, odd) {
+  function addBet(type, odd, oddObject) {
     if (
       odd === null ||
       odd === undefined ||
+      !Number.isFinite(Number(odd)) ||
       Number(odd) <= 0
     ) {
       return;
@@ -39,22 +165,47 @@ export default function MatchCard({ match, live = false }) {
 
     const selection = {
       match_id: match.id,
-      market: "1X2",
+      market_id: resultMarket?.id || null,
+      odd_id: oddObject?.id || null,
+      market:
+        resultMarket?.market_type ||
+        resultMarket?.name ||
+        "1X2",
       selection: type,
       odds: Number(odd),
       home_team: homeTeamName,
       away_team: awayTeamName,
     };
 
-    if (typeof betSlip?.toggleSelection === "function") {
+    if (
+      typeof betSlip?.toggleSelection ===
+      "function"
+    ) {
       betSlip.toggleSelection(selection);
       return;
     }
 
-    if (typeof betSlip?.addSelection === "function") {
+    if (
+      typeof betSlip?.addSelection ===
+      "function"
+    ) {
       betSlip.addSelection(selection);
     }
   }
+
+  const scheduledTime =
+    match.time ||
+    (match.scheduled_at
+      ? new Date(
+          match.scheduled_at
+        ).toLocaleTimeString(
+          "en-KE",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        )
+      : "");
 
   return (
     <article
@@ -64,7 +215,10 @@ export default function MatchCard({ match, live = false }) {
     >
       <div className="bb-match-card-top">
         <span className="bb-league">
-          {live && <i className="bb-live-dot small" />}
+          {live && (
+            <i className="bb-live-dot small" />
+          )}
+
           {leagueName || "Football"}
         </span>
 
@@ -75,7 +229,9 @@ export default function MatchCard({ match, live = false }) {
               : "bb-match-time"
           }
         >
-          {match.time}
+          {live
+            ? "LIVE"
+            : scheduledTime || "—"}
         </span>
       </div>
 
@@ -91,7 +247,7 @@ export default function MatchCard({ match, live = false }) {
 
           {live && (
             <b className="bb-live-score">
-              {match.home_score}
+              {match.home_score ?? 0}
             </b>
           )}
         </div>
@@ -111,7 +267,7 @@ export default function MatchCard({ match, live = false }) {
 
           {live && (
             <b className="bb-live-score">
-              {match.away_score}
+              {match.away_score ?? 0}
             </b>
           )}
         </div>
@@ -119,60 +275,99 @@ export default function MatchCard({ match, live = false }) {
 
       <div className="bb-market-label">
         <span>1X2</span>
-        <span>Match Result</span>
+        <span>
+          {resultMarket?.name ||
+            "Match Result"}
+        </span>
       </div>
 
       <div className="bb-odds">
         <button
           type="button"
+          disabled={homeOdds === null}
           className={
             isSelected("HOME")
               ? "bb-odd-selected"
               : ""
           }
           onClick={() =>
-            addBet("HOME", match.home_odds)
+            addBet(
+              "HOME",
+              homeOdds,
+              homeOdd
+            )
           }
         >
           <small>1</small>
-          <strong>{match.home_odds}</strong>
+          <strong>
+            {formatOdd(homeOdds)}
+          </strong>
         </button>
 
         <button
           type="button"
+          disabled={drawOdds === null}
           className={
             isSelected("DRAW")
               ? "bb-odd-selected"
               : ""
           }
           onClick={() =>
-            addBet("DRAW", match.draw_odds)
+            addBet(
+              "DRAW",
+              drawOdds,
+              drawOdd
+            )
           }
         >
           <small>X</small>
-          <strong>{match.draw_odds}</strong>
+          <strong>
+            {formatOdd(drawOdds)}
+          </strong>
         </button>
 
         <button
           type="button"
+          disabled={awayOdds === null}
           className={
             isSelected("AWAY")
               ? "bb-odd-selected"
               : ""
           }
           onClick={() =>
-            addBet("AWAY", match.away_odds)
+            addBet(
+              "AWAY",
+              awayOdds,
+              awayOdd
+            )
           }
         >
           <small>2</small>
-          <strong>{match.away_odds}</strong>
+          <strong>
+            {formatOdd(awayOdds)}
+          </strong>
         </button>
 
         <button
           type="button"
           className="bb-more-odds"
         >
-          <strong>+12</strong>
+          <strong>
+            +{Math.max(
+              0,
+              markets.reduce(
+                (total, market) =>
+                  total +
+                  (Array.isArray(
+                    market.odds
+                  )
+                    ? market.odds.length
+                    : 0),
+                0
+              ) - 3
+            )}
+          </strong>
+
           <small>markets</small>
         </button>
       </div>
