@@ -1090,8 +1090,8 @@ export default function Dashboard() {
       )}
 
       {/* DESKTOP BETSLIP */}
-      {tab === "home" && (
-        <div className="bb-betslip-floating">
+      {tab === "home" && selections.length > 0 && (
+        <div className="bb-betslip-floating bb-desktop-betslip">
           <BetSlip
             onOpenWin={() => {
               setSlipOpen(true);
@@ -1099,6 +1099,27 @@ export default function Dashboard() {
             }}
           />
         </div>
+      )}
+
+      {/* MOBILE FLOATING BET BUTTON */}
+      {tab === "home" && selections.length > 0 && (
+        <button
+          type="button"
+          className="bb-mobile-floating-bet"
+          onClick={() => {
+            setSlipOpen(true);
+            setTab("win");
+          }}
+          aria-label={`Open bet slip with ${selections.length} selections`}
+        >
+          <span className="bb-mobile-floating-icon">
+            🎟️
+          </span>
+
+          <span className="bb-mobile-floating-count">
+            {selections.length}
+          </span>
+        </button>
       )}
 
       {/* MOBILE BOTTOM NAV */}
