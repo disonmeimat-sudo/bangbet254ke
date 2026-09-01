@@ -127,20 +127,19 @@ export default function Dashboard() {
     [matches]
   );
 
-  const featuredMatches = useMemo(
-    () => {
-      const featured = upcomingMatches.filter(
-        (match) => match.is_featured
-      );
-
-      return featured.length > 0
-        ? featured
-        : upcomingMatches;
-    },
+  /*
+   * TOP MATCHES
+   *
+   * Every upcoming/betting-open match returned by the
+   * public matches API should appear on the main dashboard.
+   *
+   * "is_featured" is NOT required for a match to appear here.
+   * Featured matches can still be used later for ordering.
+   */
+  const displayTopMatches = useMemo(
+    () => upcomingMatches.slice(0, 12),
     [upcomingMatches]
   );
-
-  const displayTopMatches = featuredMatches.slice(0, 12);
 
   const balance =
     user?.balance ??
