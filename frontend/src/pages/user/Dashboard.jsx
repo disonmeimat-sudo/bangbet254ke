@@ -1090,7 +1090,7 @@ export default function Dashboard() {
       )}
 
       {/* DESKTOP BETSLIP */}
-      {tab === "home" && selections.length > 0 && (
+      {tab === "home" && (
         <div className="bb-betslip-floating">
           <BetSlip
             onOpenWin={() => {
