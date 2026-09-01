@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useBetSlip } from "../../context/BetSlipContext";
 
-export default function BetSlip({ onOpenWin }) {
+export default function BetSlip({ onOpenWin, fullPage = false }) {
   const {
     selections = [],
     removeSelection,
@@ -22,7 +22,7 @@ export default function BetSlip({ onOpenWin }) {
     Number(stake || 0) * Number(totalOdds || 1);
 
   // Floating YOUR BET button.
-  if (!slipOpen) {
+  if (!slipOpen && !fullPage) {
     return (
       <button
         type="button"

@@ -149,6 +149,11 @@ export default function Dashboard() {
 
   function go(section) {
     setTab(section);
+
+    if (section === "win") {
+      setSlipOpen(true);
+    }
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -641,18 +646,17 @@ export default function Dashboard() {
             </span>
 
             <h1>
-              Win 🎯
+              Your Bet 🎯
             </h1>
 
             <p>
-              Review your selections and possible
-              winnings.
+              Your selected matches and odds.
             </p>
 
           </div>
 
           <div className="bb-dashboard-betslip">
-            <BetSlip />
+            <BetSlip fullPage />
           </div>
 
         </main>
