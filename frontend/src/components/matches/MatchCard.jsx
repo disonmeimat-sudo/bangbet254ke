@@ -18,28 +18,50 @@ export default function MatchCard({ match, live = false }) {
       ? match.away_team?.name
       : match.away_team;
 
+  const selections = betSlip?.selections || [];
+
+  function isSelected(type) {
+    return selections.some(
+      (item) =>
+        Number(item.match_id) === Number(match.id) &&
+        item.selection === type
+    );
+  }
+
   function addBet(type, odd) {
+    if (
+      odd === null ||
+      odd === undefined ||
+      Number(odd) <= 0
+    ) {
+      return;
+    }
+
     const selection = {
       match_id: match.id,
-      market: type,
+      market: "1X2",
       selection: type,
       odds: Number(odd),
       home_team: homeTeamName,
       away_team: awayTeamName,
     };
 
-    if (typeof betSlip?.addSelection === "function") {
-      betSlip.addSelection(selection);
+    if (typeof betSlip?.toggleSelection === "function") {
+      betSlip.toggleSelection(selection);
       return;
     }
 
-    if (typeof betSlip?.addBet === "function") {
-      betSlip.addBet(selection);
+    if (typeof betSlip?.addSelection === "function") {
+      betSlip.addSelection(selection);
     }
   }
 
   return (
-    <article className={`bb-match-card ${live ? "is-live" : ""}`}>
+    <article
+      className={`bb-match-card ${
+        live ? "is-live" : ""
+      }`}
+    >
       <div className="bb-match-card-top">
         <span className="bb-league">
           {live && <i className="bb-live-dot small" />}
@@ -48,7 +70,9 @@ export default function MatchCard({ match, live = false }) {
 
         <span
           className={
-            live ? "bb-match-time live-time" : "bb-match-time"
+            live
+              ? "bb-match-time live-time"
+              : "bb-match-time"
           }
         >
           {match.time}
@@ -61,7 +85,9 @@ export default function MatchCard({ match, live = false }) {
             {homeTeamName?.charAt(0) || "H"}
           </div>
 
-          <strong>{homeTeamName || "Home"}</strong>
+          <strong>
+            {homeTeamName || "Home"}
+          </strong>
 
           {live && (
             <b className="bb-live-score">
@@ -79,7 +105,9 @@ export default function MatchCard({ match, live = false }) {
             {awayTeamName?.charAt(0) || "A"}
           </div>
 
-          <strong>{awayTeamName || "Away"}</strong>
+          <strong>
+            {awayTeamName || "Away"}
+          </strong>
 
           {live && (
             <b className="bb-live-score">
@@ -95,22 +123,55 @@ export default function MatchCard({ match, live = false }) {
       </div>
 
       <div className="bb-odds">
-        <button onClick={() => addBet("HOME", match.home_odds)}>
+        <button
+          type="button"
+          className={
+            isSelected("HOME")
+              ? "bb-odd-selected"
+              : ""
+          }
+          onClick={() =>
+            addBet("HOME", match.home_odds)
+          }
+        >
           <small>1</small>
           <strong>{match.home_odds}</strong>
         </button>
 
-        <button onClick={() => addBet("DRAW", match.draw_odds)}>
+        <button
+          type="button"
+          className={
+            isSelected("DRAW")
+              ? "bb-odd-selected"
+              : ""
+          }
+          onClick={() =>
+            addBet("DRAW", match.draw_odds)
+          }
+        >
           <small>X</small>
           <strong>{match.draw_odds}</strong>
         </button>
 
-        <button onClick={() => addBet("AWAY", match.away_odds)}>
+        <button
+          type="button"
+          className={
+            isSelected("AWAY")
+              ? "bb-odd-selected"
+              : ""
+          }
+          onClick={() =>
+            addBet("AWAY", match.away_odds)
+          }
+        >
           <small>2</small>
           <strong>{match.away_odds}</strong>
         </button>
 
-        <button className="bb-more-odds">
+        <button
+          type="button"
+          className="bb-more-odds"
+        >
           <strong>+12</strong>
           <small>markets</small>
         </button>

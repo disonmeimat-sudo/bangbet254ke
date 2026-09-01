@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useBetSlip } from "../../context/BetSlipContext";
 
-export default function BetSlip() {
+export default function BetSlip({ onOpenWin }) {
   const {
     selections = [],
     removeSelection,
@@ -27,7 +27,13 @@ export default function BetSlip() {
       <button
         type="button"
         className="bb-floating-bet"
-        onClick={() => setSlipOpen(true)}
+        onClick={() => {
+          if (typeof onOpenWin === "function") {
+            onOpenWin();
+          } else {
+            setSlipOpen(true);
+          }
+        }}
       >
         <span className="bb-floating-bet-icon">🎟️</span>
 

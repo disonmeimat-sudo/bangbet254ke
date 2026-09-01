@@ -3058,3 +3058,38 @@ a {
     max-height: calc(100vh - 20px);
   }
 }
+
+/* =========================================================
+   SELECTED BETTING ODD
+   ========================================================= */
+
+.bb-odds button.bb-odd-selected {
+  transform: translateY(-1px);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.18);
+}
+
+.bb-odds button.bb-odd-selected strong {
+  font-weight: 800;
+}
+
+/* =========================================================
+   FLOATING YOUR BET
+   ========================================================= */
+
+.bb-floating-bet {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.bb-floating-bet:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .bb-floating-bet {
+    right: 14px;
+    bottom: 86px;
+    max-width: calc(100vw - 28px);
+  }
+}

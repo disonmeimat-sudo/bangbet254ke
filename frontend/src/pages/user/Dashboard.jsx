@@ -66,6 +66,7 @@ export default function Dashboard() {
   const {
     selections = [],
     betHistory = [],
+    setSlipOpen,
   } = useBetSlip();
 
   const navigate = useNavigate();
@@ -1090,9 +1091,14 @@ export default function Dashboard() {
       )}
 
       {/* DESKTOP BETSLIP */}
-      {tab === "home" && (
+      {tab === "home" && selections.length > 0 && (
         <div className="bb-betslip-floating">
-          <BetSlip />
+          <BetSlip
+            onOpenWin={() => {
+              setSlipOpen(true);
+              setTab("win");
+            }}
+          />
         </div>
       )}
 
