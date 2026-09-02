@@ -3252,3 +3252,797 @@ a {
   max-width: 650px;
   margin: 0 auto;
 }
+
+/* =========================================================
+   BANGBET254 DEPOSIT SCREEN
+   ========================================================= */
+
+.bb-wallet-page {
+  min-height: 100vh;
+}
+
+.bb-wallet-container {
+  padding: 40px 20px 100px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   WALLET BUTTONS
+   ========================================================= */
+
+.bb-wallet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.bb-wallet-actions button {
+  min-height: 52px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.bb-wallet-deposit-button {
+  background: #09a90d;
+  color: #ffffff;
+}
+
+.bb-wallet-withdraw-button {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.bb-wallet-actions button span {
+  margin-right: 6px;
+}
+
+
+/* =========================================================
+   WALLET ERROR
+   ========================================================= */
+
+.bb-wallet-error {
+  margin-top: 15px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   DEPOSIT OVERLAY
+   ========================================================= */
+
+.bb-deposit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: #ffffff;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* =========================================================
+   DEPOSIT PANEL
+   ========================================================= */
+
+.bb-deposit-panel {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #202124;
+  padding-bottom: 20px;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.bb-deposit-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 12px;
+}
+
+.bb-deposit-header h1 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #252525;
+}
+
+.bb-deposit-close {
+  border: 0;
+  background: transparent;
+  color: #70757a;
+  font-size: 39px;
+  line-height: 30px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+
+/* =========================================================
+   ACCOUNT
+   ========================================================= */
+
+.bb-deposit-account {
+  padding: 10px 22px 28px;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #15951d;
+}
+
+.bb-deposit-account span {
+  font-weight: 800;
+}
+
+.bb-deposit-account strong {
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   SECTION HEADINGS
+   ========================================================= */
+
+.bb-deposit-section {
+  padding: 0 22px;
+}
+
+.bb-deposit-section h2,
+.bb-help-section h2 {
+  margin: 0 0 18px;
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #272727;
+}
+
+
+/* =========================================================
+   PAYMENT METHODS
+   ========================================================= */
+
+.bb-payment-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.bb-payment-method {
+  height: 112px;
+  border: 2px solid transparent;
+  border-radius: 15px;
+  background: #f1f2f4;
+  color: #444;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.bb-payment-method.active {
+  background: #def5d5;
+  border-color: #13a92a;
+  color: #26972e;
+}
+
+.bb-method-logo {
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  font-size: 29px;
+  font-weight: 900;
+}
+
+.bb-mpesa-logo {
+  color: #13a92a;
+}
+
+.bb-airtel-logo {
+  color: #30343b;
+}
+
+
+/* =========================================================
+   AMOUNT SECTION
+   ========================================================= */
+
+.bb-amount-section {
+  padding-bottom: 0;
+}
+
+.bb-amount-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+
+/* =========================================================
+   AMOUNT CARDS
+   ========================================================= */
+
+.bb-amount-card {
+  position: relative;
+
+  min-width: 0;
+  height: 112px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 14px;
+
+  background: #f1f2f4;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  color: #25272c;
+}
+
+.bb-amount-card.active {
+  background: #dff5d5;
+  box-shadow: inset 0 0 0 2px #19a82b;
+}
+
+.bb-amount-value {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  font-size: 27px;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.bb-amount-card.active .bb-amount-value {
+  color: #149b20;
+}
+
+.bb-bonus-strip {
+  width: 100%;
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #a442ef;
+
+  color: #ffffff;
+
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.bb-amount-card.active .bb-bonus-strip {
+  background: #09a914;
+}
+
+
+/* =========================================================
+   CUSTOM AMOUNT
+   ========================================================= */
+
+.bb-custom-amount {
+  position: relative;
+  margin: 16px 22px 22px;
+}
+
+.bb-custom-amount input {
+  width: 100%;
+  height: 80px;
+
+  box-sizing: border-box;
+
+  border: 2px solid #e1e1e1;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  padding: 0 58px 0 24px;
+
+  color: #303238;
+
+  font-size: 29px;
+  font-weight: 800;
+
+  outline: none;
+}
+
+.bb-custom-amount input:focus {
+  border-color: #19a82b;
+}
+
+.bb-clear-amount {
+  position: absolute;
+
+  right: 17px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 38px;
+  height: 38px;
+
+  border: 0;
+  background: transparent;
+
+  color: #70757a;
+
+  font-size: 31px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   PHONE NUMBER
+   ========================================================= */
+
+.bb-deposit-phone-wrap {
+  margin: 0 22px 20px;
+}
+
+.bb-deposit-phone-wrap label {
+  display: block;
+  margin-bottom: 8px;
+
+  font-size: 15px;
+  font-weight: 800;
+  color: #333;
+}
+
+.bb-deposit-phone-wrap input {
+  width: 100%;
+  height: 55px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d8d8d8;
+  border-radius: 12px;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+
+  font-size: 17px;
+
+  outline: none;
+}
+
+.bb-deposit-phone-wrap input:focus {
+  border-color: #13a92a;
+}
+
+
+/* =========================================================
+   TAX / REWARD ROWS
+   ========================================================= */
+
+.bb-deposit-info-row {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 7px 22px;
+
+  font-size: 17px;
+  line-height: 1.4;
+
+  color: #3e4147;
+}
+
+.bb-deposit-info-row strong {
+  font-weight: 500;
+}
+
+.bb-info-icon {
+  flex: 0 0 auto;
+
+  width: 30px;
+  height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  font-size: 20px;
+}
+
+.tax-icon {
+  color: #ef6256;
+}
+
+.reward-icon {
+  color: #ef6256;
+}
+
+.bb-reward-text {
+  color: #16952b !important;
+  font-weight: 500 !important;
+}
+
+.bb-info-button {
+  flex: 0 0 auto;
+
+  width: 29px;
+  height: 29px;
+
+  border: 2px solid #444;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #333;
+
+  font-size: 17px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
+
+.bb-deposit-message {
+  margin: 15px 22px 0;
+
+  padding: 13px 15px;
+
+  border-radius: 11px;
+
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.bb-deposit-error {
+  background: #fff1f2;
+  color: #b42318;
+}
+
+.bb-deposit-success {
+  background: #ecfdf3;
+  color: #16803a;
+}
+
+
+/* =========================================================
+   PAY BUTTON
+   ========================================================= */
+
+.bb-pay-button {
+  display: block;
+
+  width: calc(100% - 44px);
+  height: 66px;
+
+  margin: 26px 22px 36px;
+
+  border: 0;
+  border-radius: 34px;
+
+  background: #08a80d;
+
+  color: #ffffff;
+
+  font-size: 27px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  box-shadow: none;
+}
+
+.bb-pay-button:hover {
+  background: #079b0c;
+}
+
+.bb-pay-button:active {
+  transform: scale(.99);
+}
+
+.bb-pay-button:disabled {
+  background: #8fcf92;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   HELP
+   ========================================================= */
+
+.bb-help-section {
+  border-top: 1px solid #dedede;
+
+  padding: 25px 22px 0;
+}
+
+.bb-help-section h2 {
+  margin-bottom: 20px;
+}
+
+.bb-help-row {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  border: 0;
+  background: transparent;
+
+  padding: 0 0 20px;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.bb-help-icon {
+  flex: 0 0 auto;
+
+  width: 25px;
+  height: 25px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #0ba718;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.bb-help-text {
+  flex: 1;
+
+  color: #34363b;
+
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.bb-help-chevron {
+  color: #555;
+
+  font-size: 27px;
+}
+
+
+/* =========================================================
+   WITHDRAWAL
+   ========================================================= */
+
+.bb-withdraw-panel {
+  width: 100%;
+  min-height: 100%;
+  background: #ffffff;
+}
+
+.bb-withdraw-content {
+  padding: 0 22px 40px;
+}
+
+.bb-withdraw-content label {
+  display: block;
+  margin: 18px 0 8px;
+
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.bb-withdraw-content input {
+  width: 100%;
+  height: 55px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d7d7d7;
+  border-radius: 11px;
+
+  padding: 0 15px;
+
+  font-size: 17px;
+}
+
+.bb-withdraw-balance {
+  margin: 5px 0 20px;
+
+  font-size: 16px;
+  color: #555;
+}
+
+
+/* =========================================================
+   DESKTOP
+   ========================================================= */
+
+@media (min-width: 801px) {
+
+  .bb-deposit-overlay {
+    background: rgba(0, 0, 0, .45);
+
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .bb-deposit-panel,
+  .bb-withdraw-panel {
+    width: 500px;
+    max-width: 500px;
+    min-height: 100vh;
+
+    box-shadow: -8px 0 30px rgba(0, 0, 0, .15);
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .bb-wallet-container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .bb-deposit-header {
+    padding: 18px 22px 10px;
+  }
+
+  .bb-deposit-header h1 {
+    font-size: 28px;
+  }
+
+  .bb-deposit-account {
+    padding-left: 22px;
+    padding-right: 22px;
+    padding-bottom: 27px;
+  }
+
+  .bb-payment-methods {
+    gap: 16px;
+  }
+
+  .bb-payment-method {
+    height: 112px;
+  }
+
+  .bb-amount-grid {
+    gap: 16px;
+  }
+
+  .bb-amount-card {
+    height: 112px;
+  }
+
+  .bb-amount-value {
+    font-size: 25px;
+  }
+
+  .bb-bonus-strip {
+    height: 31px;
+    font-size: 16px;
+  }
+
+  .bb-custom-amount {
+    margin-left: 22px;
+    margin-right: 22px;
+  }
+
+  .bb-custom-amount input {
+    height: 80px;
+    font-size: 27px;
+  }
+
+  .bb-deposit-info-row {
+    font-size: 16px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .bb-payment-method {
+    height: 100px;
+    font-size: 17px;
+  }
+
+  .bb-amount-grid {
+    gap: 10px;
+  }
+
+  .bb-amount-card {
+    height: 100px;
+  }
+
+  .bb-amount-value {
+    font-size: 21px;
+  }
+
+  .bb-bonus-strip {
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .bb-deposit-info-row {
+    font-size: 14px;
+  }
+
+  .bb-pay-button {
+    font-size: 24px;
+  }
+
+}
+
+
+/* =========================================================
+   PREVENT BACKGROUND SCROLL WHILE DEPOSIT IS OPEN
+   ========================================================= */
+
+body:has(.bb-deposit-overlay) {
+  overflow: hidden;
+}
+
