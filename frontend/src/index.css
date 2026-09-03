@@ -4046,3 +4046,289 @@ body:has(.bb-deposit-overlay) {
   overflow: hidden;
 }
 
+
+/* =========================================================
+   DEPOSIT SCREEN — COMPACT SIZING
+   ========================================================= */
+
+/* Deposit headings */
+.bb-deposit-section h2,
+.bb-help-section h2 {
+  font-size: 16px;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+
+/* Account text */
+.bb-deposit-account {
+  font-size: 13px;
+}
+
+/* Payment method cards */
+.bb-payment-methods {
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.bb-payment-method {
+  height: 78px;
+  border-radius: 11px;
+  gap: 3px;
+  font-size: 14px;
+}
+
+.bb-method-logo {
+  width: 28px;
+  height: 28px;
+  font-size: 21px;
+}
+
+/* Amount section */
+.bb-amount-grid {
+  gap: 10px;
+}
+
+/* Amount cards */
+.bb-amount-card {
+  height: 78px;
+  border-radius: 10px;
+}
+
+.bb-amount-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.bb-bonus-strip {
+  height: 22px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Custom amount */
+.bb-custom-amount {
+  margin: 10px 14px 14px;
+}
+
+.bb-custom-amount input {
+  height: 54px;
+  border-radius: 10px;
+  padding: 0 45px 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.bb-clear-amount {
+  right: 11px;
+  width: 28px;
+  height: 28px;
+  font-size: 23px;
+}
+
+/* M-Pesa phone */
+.bb-deposit-phone-wrap label {
+  font-size: 13px;
+}
+
+.bb-deposit-phone-wrap input {
+  height: 50px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+/* Deposit information rows */
+.bb-deposit-info-row {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.bb-info-icon {
+  font-size: 15px;
+}
+
+.bb-info-button {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+
+/* Pay button */
+.bb-pay-button {
+  min-height: 48px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+/* Help section */
+.bb-help-section h2 {
+  font-size: 16px;
+}
+
+.bb-help-row {
+  min-height: 45px;
+  font-size: 13px;
+}
+
+.bb-help-icon {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+
+.bb-help-text {
+  font-size: 13px;
+}
+
+.bb-help-chevron {
+  font-size: 14px;
+}
+
+/* Deposit messages */
+.bb-deposit-message {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+
+/* =========================================================
+   DEPOSIT SCREEN — EXTRA SMALL / COMPACT
+   ========================================================= */
+
+.bb-deposit-section h2,
+.bb-help-section h2 {
+  font-size: 13px !important;
+  margin: 6px 0 7px !important;
+}
+
+.bb-deposit-account {
+  font-size: 11px !important;
+  margin-bottom: 8px !important;
+}
+
+/* PAYMENT METHODS */
+.bb-payment-methods {
+  gap: 7px !important;
+  margin-bottom: 12px !important;
+}
+
+.bb-payment-method {
+  height: 58px !important;
+  border-radius: 8px !important;
+  gap: 1px !important;
+  font-size: 11px !important;
+}
+
+.bb-method-logo {
+  width: 21px !important;
+  height: 21px !important;
+  font-size: 16px !important;
+}
+
+/* AMOUNTS */
+.bb-amount-grid {
+  gap: 7px !important;
+}
+
+.bb-amount-card {
+  height: 58px !important;
+  border-radius: 8px !important;
+}
+
+.bb-amount-value {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+.bb-bonus-strip {
+  height: 17px !important;
+  font-size: 9px !important;
+}
+
+/* CUSTOM AMOUNT */
+.bb-custom-amount {
+  margin: 7px 9px 9px !important;
+}
+
+.bb-custom-amount input {
+  height: 42px !important;
+  border-radius: 8px !important;
+  padding: 0 35px 0 12px !important;
+  font-size: 14px !important;
+}
+
+.bb-clear-amount {
+  right: 8px !important;
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 18px !important;
+}
+
+/* PHONE */
+.bb-deposit-phone-wrap label {
+  font-size: 11px !important;
+}
+
+.bb-deposit-phone-wrap input {
+  height: 40px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+}
+
+/* INFO */
+.bb-deposit-info-row {
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+  margin: 5px 0 !important;
+}
+
+.bb-info-icon {
+  font-size: 12px !important;
+}
+
+.bb-info-button {
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 10px !important;
+}
+
+/* PAY */
+.bb-pay-button {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+}
+
+/* HELP */
+.bb-help-section {
+  margin-top: 10px !important;
+}
+
+.bb-help-section h2 {
+  font-size: 13px !important;
+}
+
+.bb-help-row {
+  min-height: 36px !important;
+  font-size: 10px !important;
+}
+
+.bb-help-icon {
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 10px !important;
+}
+
+.bb-help-text {
+  font-size: 10px !important;
+}
+
+.bb-help-chevron {
+  font-size: 11px !important;
+}
+
+.bb-deposit-message {
+  font-size: 10px !important;
+  padding: 6px !important;
+}
+

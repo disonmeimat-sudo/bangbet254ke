@@ -3,8 +3,6 @@ from pydantic import BaseModel, ConfigDict
 
 class TeamCreate(BaseModel):
     name: str
-    short_name: str | None = None
-    logo_url: str | None = None
     country: str | None = None
     sport: str = "football"
     league_id: int
@@ -13,11 +11,9 @@ class TeamCreate(BaseModel):
 class TeamResponse(BaseModel):
     id: int
     name: str
-    short_name: str | None
-    logo_url: str | None
     country: str | None
     sport: str
-    league_id: int
+    league_id: int | None
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)

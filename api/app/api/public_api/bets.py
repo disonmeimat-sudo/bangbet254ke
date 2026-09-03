@@ -125,7 +125,7 @@ def place_bet(
         stake=stake,
         total_odds=total_odds,
         potential_win=potential_win,
-        status="pending",
+        status="active",
         selections=selections,
     )
 
@@ -138,6 +138,7 @@ def place_bet(
         "stake": bet.stake,
         "total_odds": bet.total_odds,
         "potential_win": bet.potential_win,
+        "possible_win": bet.potential_win,
         "status": bet.status,
         "created_at": bet.created_at,
         "selections": bet.selections,
@@ -166,6 +167,7 @@ def get_my_bets(
             "stake": bet.stake,
             "total_odds": bet.total_odds,
             "potential_win": bet.potential_win,
+            "possible_win": bet.potential_win,
             "status": bet.status,
             "created_at": bet.created_at,
             "selections": bet.selections or [],

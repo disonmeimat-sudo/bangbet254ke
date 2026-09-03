@@ -115,6 +115,16 @@ export default function Wallet() {
 
   useEffect(() => {
     loadWallet();
+
+    const handleWalletFocus = () => {
+      loadWallet();
+    };
+
+    window.addEventListener("focus", handleWalletFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleWalletFocus);
+    };
   }, []);
 
   const accountNumber = useMemo(() => {
