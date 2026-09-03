@@ -98,7 +98,7 @@ export default function BetSlip({ onOpenWin, fullPage = false }) {
         <div className="bb-betslip-empty">
           <div className="bb-betslip-icon">🎟️</div>
 
-          <strong>Your betslip is empty</strong>
+          <strong>Your bet has been placed successfully.</strong>
 
           <p>
             Click on any odds to add a selection.
