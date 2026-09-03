@@ -5,6 +5,7 @@ import { useBetSlip } from "../../context/BetSlipContext";
 import MatchCard from "../../components/matches/MatchCard";
 import BetSlip from "../../components/betting/BetSlip";
 import { getPublicMatches } from "../../api/matches";
+import { getWallet } from "../../api/wallet";
 
 function SportIcon({ icon, label }) {
   return (
@@ -73,6 +74,7 @@ export default function Dashboard() {
 
   const [tab, setTab] = useState("home");
   const [matches, setMatches] = useState([]);
+  const [wallet, setWallet] = useState(null);
   const [matchesLoading, setMatchesLoading] = useState(true);
   const [matchesError, setMatchesError] = useState("");
 
@@ -112,6 +114,31 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadWallet() {
+      try {
+        const data = await getWallet();
+
+        if (!cancelled) {
+          setWallet(data);
+        }
+      } catch (err) {
+        console.error("BangBet254 wallet balance error:", err);
+      }
+    }
+
+    loadWallet();
+
+    const interval = setInterval(loadWallet, 10000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
   const liveMatches = useMemo(
     () => matches.filter((match) => match.is_live),
     [matches]
@@ -141,11 +168,13 @@ export default function Dashboard() {
     [upcomingMatches]
   );
 
-  const balance =
+  const balance = Number(
+    wallet?.balance ??
     user?.balance ??
     user?.wallet_balance ??
     user?.available_balance ??
-    0;
+    0
+  );
 
   const [showBalance, setShowBalance] = useState(false);
 
