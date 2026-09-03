@@ -949,7 +949,7 @@ export default function Dashboard() {
                         <strong>
                           KSh{" "}
                           {Number(
-                            bet.possible_win
+                            bet.potential_win
                           ).toLocaleString(
                             "en-KE",
                             {
