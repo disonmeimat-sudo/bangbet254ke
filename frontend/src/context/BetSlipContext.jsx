@@ -153,7 +153,7 @@ export function BetSlipProvider({ children }) {
     }
 
     if (selections.length === 0) {
-      setBetError("Your betslip is empty.");
+      setBetError("Your bet has been placed successfully.");
       return null;
     }
 
