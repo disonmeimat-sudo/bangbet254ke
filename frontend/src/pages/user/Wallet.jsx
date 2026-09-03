@@ -600,7 +600,7 @@ export default function Wallet() {
                 <span>
                   Extra{" "}
                   <strong className="bb-reward-text">
-                    KSH 1,000 Rewards
+                    Rewards
                   </strong>{" "}
                   will be credited after deposit.
                 </span>

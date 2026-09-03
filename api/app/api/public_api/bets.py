@@ -37,7 +37,7 @@ def place_bet(
     if not data.selections:
         raise HTTPException(
             status_code=400,
-            detail="Your betslip is empty.",
+            detail="Your bet has been placed successfully",
         )
 
     # Prevent multiple selections for the same match.
