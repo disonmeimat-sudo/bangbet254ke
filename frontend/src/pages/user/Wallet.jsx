@@ -667,7 +667,7 @@ export default function Wallet() {
                 </span>
 
                 <span className="bb-help-text">
-                  Pay with M-PESA Paybill 569699
+                  Pay with M-PESA paybill currently unavailable
                 </span>
 
                 <span className="bb-help-chevron">
