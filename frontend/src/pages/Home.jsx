@@ -286,7 +286,7 @@ export default function Home() {
           <small>Aviator</small>
         </button>
 
-        <Link to="/matches" className="bb-bottom-item bb-bets-nav">
+        <Link to="/my-bets" className="bb-bottom-item bb-bets-nav">
           <span>📋</span>
           <small>My Bets</small>
           {selections.length > 0 && (
