@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
 from app.models.match import Match
-from app.models.team import Team
 
 router = APIRouter(
     prefix="/api/public/matches",
@@ -21,7 +20,15 @@ def get_public_matches(
     search: str | None = None,
     db: Session = Depends(get_db),
 ):
-    query = db.query(Match)
+    query = (
+        db.query(Match)
+        .options(
+            selectinload(Match.home_team),
+            selectinload(Match.away_team),
+            selectinload(Match.league),
+            selectinload(Match.markets),
+        )
+    )
 
     if status:
         query = query.filter(
@@ -55,16 +62,89 @@ def get_public_matches(
         query = (
             query
             .join(
-                Team,
-                (Match.home_team_id == Team.id)
-                | (Match.away_team_id == Team.id),
+                Match.home_team
             )
-            .filter(Team.name.ilike(search_term))
-            .distinct()
+            .filter(
+                Match.home_team.has(
+                    Match.home_team.property.mapper.class_.name.ilike(
+                        search_term
+                    )
+                )
+                |
+                Match.away_team.has(
+                    Match.away_team.property.mapper.class_.name.ilike(
+                        search_term
+                    )
+                )
+            )
         )
 
-    return (
+    matches = (
         query
         .order_by(Match.scheduled_at.asc())
         .all()
     )
+
+    result = []
+
+    for match in matches:
+        markets = []
+
+        for market in match.markets:
+            if not market.is_active:
+                continue
+
+            odds = []
+
+            for odd in market.odds:
+                if not odd.is_active:
+                    continue
+
+                odds.append(
+                    {
+                        "id": odd.id,
+                        "name": odd.name,
+                        "value": odd.value,
+                        "is_active": odd.is_active,
+                    }
+                )
+
+            markets.append(
+                {
+                    "id": market.id,
+                    "name": market.name,
+                    "market_type": market.market_type,
+                    "is_active": market.is_active,
+                    "odds": odds,
+                }
+            )
+
+        result.append(
+            {
+                "id": match.id,
+                "league_id": match.league_id,
+                "home_team_id": match.home_team_id,
+                "away_team_id": match.away_team_id,
+                "home_team": {
+                    "id": match.home_team.id,
+                    "name": match.home_team.name,
+                    "country": match.home_team.country,
+                } if match.home_team else None,
+                "away_team": {
+                    "id": match.away_team.id,
+                    "name": match.away_team.name,
+                    "country": match.away_team.country,
+                } if match.away_team else None,
+                "scheduled_at": match.scheduled_at,
+                "status": match.status,
+                "is_live": match.is_live,
+                "is_featured": match.is_featured,
+                "is_betting_open": match.is_betting_open,
+                "home_score": match.home_score,
+                "away_score": match.away_score,
+                "created_at": match.created_at,
+                "markets": markets,
+            }
+        )
+
+    return result

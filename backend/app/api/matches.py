@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -9,6 +10,9 @@ from app.models.league import League
 from app.models.match import Match
 from app.models.team import Team
 from app.models.user import User
+from app.models.bet import Bet
+from app.models.transaction import Transaction
+from app.services.wallet import credit_wallet, get_or_create_wallet
 from app.schemas.match import (
     MatchBettingUpdate,
     MatchCreate,
@@ -235,6 +239,105 @@ def update_status(
 
     if new_status in {"ended", "cancelled"}:
         match.is_betting_open = False
+
+    # ---------------------------------------------------------
+    # SETTLE BETS WHEN A MATCH ENDS
+    # ---------------------------------------------------------
+    if new_status == "ended":
+        home_score = match.home_score
+        away_score = match.away_score
+
+        if home_score > away_score:
+            winning_selection = "HOME"
+        elif away_score > home_score:
+            winning_selection = "AWAY"
+        else:
+            winning_selection = "DRAW"
+
+        pending_bets = (
+            db.query(Bet)
+            .filter(Bet.status == "pending")
+            .all()
+        )
+
+        for bet in pending_bets:
+            # Find selections belonging to this match.
+            match_selections = [
+                selection
+                for selection in (bet.selections or [])
+                if int(selection.get("match_id", -1)) == match.id
+            ]
+
+            if not match_selections:
+                continue
+
+            # Never settle the same match selection twice.
+            for selection in match_selections:
+                selection["result"] = (
+                    "won"
+                    if selection.get("selection") == winning_selection
+                    else "lost"
+                )
+                selection["settled"] = True
+
+            # Make sure SQLAlchemy detects the JSON change.
+            bet.selections = list(bet.selections or [])
+
+            # Check every selection in the bet.
+            all_settled = True
+            all_won = True
+
+            for selection in bet.selections:
+                selection_match_id = int(
+                    selection.get("match_id", -1)
+                )
+
+                # This selection belongs to a match that has not ended yet.
+                if selection.get("settled") is not True:
+                    all_settled = False
+                    all_won = False
+                    continue
+
+                if selection.get("result") != "won":
+                    all_won = False
+
+            # Single bet / accumulator containing a losing selection.
+            if all_settled and not all_won:
+                bet.status = "lost"
+
+            # Only pay when every selection in the bet has won.
+            elif all_settled and all_won:
+                bet.status = "won"
+
+                payout = Decimal(str(bet.potential_win))
+
+                wallet = get_or_create_wallet(
+                    db=db,
+                    user_id=bet.user_id,
+                )
+
+                balance_before = wallet.balance
+
+                credit_wallet(
+                    db=db,
+                    wallet=wallet,
+                    amount=payout,
+                )
+
+                transaction = Transaction(
+                    user_id=bet.user_id,
+                    wallet_id=wallet.id,
+                    transaction_type="win",
+                    status="completed",
+                    amount=payout,
+                    reference=f"BET_WIN_{bet.id}",
+                    payment_method="wallet",
+                    description=f"Winnings for bet #{bet.id}",
+                )
+
+                db.add(transaction)
+
+        db.commit()
 
     db.commit()
     db.refresh(match)

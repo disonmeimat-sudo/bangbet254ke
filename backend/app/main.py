@@ -26,6 +26,7 @@ from app.api.admin.markets import router as admin_markets_router
 from app.api.admin.odds import router as admin_odds_router
 from app.api.public.wallet import router as wallet_router
 from app.api.public.transactions import router as transactions_router
+from app.api.bets import router as bet_router
 
 
 # Create missing database tables.
@@ -70,6 +71,7 @@ app.include_router(admin_odds_router)
 app.include_router(public_matches_router)
 app.include_router(wallet_router)
 app.include_router(transactions_router)
+app.include_router(bet_router)
 
 
 @app.get("/")

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -33,6 +33,12 @@ class Bet(Base):
     potential_win: Mapped[float] = mapped_column(
         Float,
         nullable=False,
+    )
+
+    selections: Mapped[list] = mapped_column(
+        JSON,
+        nullable=False,
+        default=list,
     )
 
     status: Mapped[str] = mapped_column(
