@@ -122,7 +122,8 @@ def debug_db_status():
         db_info = conn.execute(text("""
             SELECT
                 current_database() AS db,
-                current_schema() AS schema
+                current_schema() AS schema,
+                inet_server_addr() AS server
         """)).mappings().one()
 
         user = conn.execute(text("""
@@ -139,6 +140,7 @@ def debug_db_status():
     return {
         "database": db_info["db"],
         "schema": db_info["schema"],
+        "server": str(db_info["server"]) if db_info["server"] else None,
         "admin_found": user is not None,
         "admin_id": user["id"] if user else None,
         "admin_active": user["is_active"] if user else None,
