@@ -114,6 +114,38 @@ def health():
     }
 
 
+@app.get("/api/debug/db-status")
+def debug_db_status():
+    from sqlalchemy import text
+
+    with engine.connect() as conn:
+        db_info = conn.execute(text("""
+            SELECT
+                current_database() AS db,
+                current_schema() AS schema
+        """)).mappings().one()
+
+        user = conn.execute(text("""
+            SELECT
+                id,
+                full_name,
+                phone,
+                is_active,
+                is_admin
+            FROM users
+            WHERE phone = '0708209070'
+        """)).mappings().first()
+
+    return {
+        "database": db_info["db"],
+        "schema": db_info["schema"],
+        "admin_found": user is not None,
+        "admin_id": user["id"] if user else None,
+        "admin_active": user["is_active"] if user else None,
+        "admin_is_admin": user["is_admin"] if user else None,
+    }
+
+
 @app.get("/api/health")
 def api_health():
     return {
