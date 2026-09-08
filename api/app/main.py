@@ -137,10 +137,16 @@ def debug_db_status():
             WHERE phone = '0708209070'
         """)).mappings().first()
 
+    from sqlalchemy.engine import make_url
+
+    db_url = make_url(str(engine.url))
+
     return {
         "database": db_info["db"],
         "schema": db_info["schema"],
         "server": str(db_info["server"]) if db_info["server"] else None,
+        "host": db_url.host,
+        "port": db_url.port,
         "admin_found": user is not None,
         "admin_id": user["id"] if user else None,
         "admin_active": user["is_active"] if user else None,
