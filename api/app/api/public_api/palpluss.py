@@ -73,6 +73,7 @@ async def palpluss_webhook(request: Request):
                 Transaction.provider_transaction_id
                 == provider_transaction_id
             )
+            .with_for_update()
             .first()
         )
 
@@ -84,6 +85,7 @@ async def palpluss_webhook(request: Request):
                     Transaction.reference
                     == external_reference
                 )
+                .with_for_update()
                 .first()
             )
 

@@ -67,6 +67,13 @@ class Transaction(Base):
         index=True,
     )
 
+    # PalPluss account used for this deposit:
+    # 1 = Till A, 2 = Till B.
+    palpluss_account: Mapped[int | None] = mapped_column(
+        nullable=True,
+        index=True,
+    )
+
     provider_transaction_id: Mapped[str | None] = mapped_column(
         String(150),
         unique=True,

@@ -2,6 +2,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.auth import get_current_user
@@ -78,27 +79,34 @@ def create_deposit(
 
     phone = clean_phone(data.phone_number)
 
+    if data.amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Deposit amount must be greater than zero.",
+        )
+
     reference = f"BBDEP-{uuid4().hex[:20].upper()}"
 
-    try:
-        stk = initiate_stk(
-            amount=float(data.amount),
-            phone=phone,
-            account_reference=reference,
-        )
-    except Exception as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Unable to initiate STK payment: {exc}",
-        )
+    # Serialize account selection so simultaneous deposits
+    # cannot both select the same PalPluss account.
+    db.execute(
+        text("SELECT pg_advisory_xact_lock(2542001)")
+    )
 
-    provider_transaction_id = stk.get("transactionId")
-
-    if not provider_transaction_id:
-        raise HTTPException(
-            status_code=502,
-            detail="PalPluss did not return a transaction ID.",
+    last_deposit = (
+        db.query(Transaction)
+        .filter(
+            Transaction.transaction_type == "deposit",
+            Transaction.palpluss_account.in_([1, 2]),
         )
+        .order_by(Transaction.id.desc())
+        .first()
+    )
+
+    if last_deposit and last_deposit.palpluss_account == 1:
+        palpluss_account = 2
+    else:
+        palpluss_account = 1
 
     transaction = Transaction(
         user_id=current_user.id,
@@ -109,16 +117,63 @@ def create_deposit(
         fee=Decimal("0.00"),
         total_debit=Decimal("0.00"),
         reference=reference,
-        provider_transaction_id=provider_transaction_id,
         payment_method="mpesa_stk",
         phone_number=phone,
+        palpluss_account=palpluss_account,
         description=(
-            f"M-Pesa STK Push sent to {phone}. "
+            f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
+            f"Routed to PalPluss Account {palpluss_account} "
+            f"(Till {'A' if palpluss_account == 1 else 'B'}). "
             "Awaiting payment."
         ),
     )
 
     db.add(transaction)
+    db.commit()
+    db.refresh(transaction)
+
+    try:
+        stk = initiate_stk(
+            amount=float(data.amount),
+            phone=phone,
+            account_reference=reference,
+            account=palpluss_account,
+        )
+    except Exception as exc:
+        transaction.status = "rejected"
+        transaction.description = (
+            f"Unable to initiate M-Pesa STK Push through "
+            f"PalPluss Account {palpluss_account}: {exc}"
+        )
+        db.commit()
+
+        raise HTTPException(
+            status_code=502,
+            detail=f"Unable to initiate STK payment: {exc}",
+        )
+
+    provider_transaction_id = stk.get("transactionId")
+
+    if not provider_transaction_id:
+        transaction.status = "rejected"
+        transaction.description = (
+            "PalPluss did not return a transaction ID."
+        )
+        db.commit()
+
+        raise HTTPException(
+            status_code=502,
+            detail="PalPluss did not return a transaction ID.",
+        )
+
+    transaction.provider_transaction_id = provider_transaction_id
+    transaction.description = (
+        f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
+        f"Routed to PalPluss Account {palpluss_account} "
+        f"(Till {'A' if palpluss_account == 1 else 'B'}). "
+        "Awaiting payment."
+    )
+
     db.commit()
     db.refresh(transaction)
 
