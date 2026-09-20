@@ -99,184 +99,7 @@ async def palpluss_webhook(request: Request):
 
         if transaction.transaction_type == "deposit":
 
-            # ----------------------------------------------------
-            # SPLIT DEPOSIT CHILD
-            # ----------------------------------------------------
-
-            if transaction.parent_transaction_id is not None:
-
-                # Lock the child row while processing the webhook.
-                transaction = (
-                    db.query(Transaction)
-                    .filter(
-                        Transaction.id == transaction.id
-                    )
-                    .with_for_update()
-                    .first()
-                )
-
-                parent = (
-                    db.query(Transaction)
-                    .filter(
-                        Transaction.id
-                        == transaction.parent_transaction_id
-                    )
-                    .with_for_update()
-                    .first()
-                )
-
-                if parent is None:
-                    return {
-                        "status": "ignored",
-                        "message": "Split deposit parent not found",
-                    }
-
-                # Duplicate webhook protection.
-                if transaction.status in {
-                    "approved",
-                    "rejected",
-                    "cancelled",
-                }:
-                    return {
-                        "status": "already_processed",
-                        "transaction_id": transaction.id,
-                        "parent_transaction_id": parent.id,
-                    }
-
-                success = (
-                    event_type == "transaction.success"
-                    or provider_status in SUCCESS_STATUSES
-                )
-
-                failed = (
-                    event_type in {
-                        "transaction.failed",
-                        "transaction.cancelled",
-                        "transaction.expired",
-                    }
-                    or provider_status in FAILED_STATUSES
-                )
-
-                if success:
-
-                    transaction.status = "approved"
-
-                    transaction.description = (
-                        f"Split deposit payment successful. "
-                        f"Account {transaction.split_account} "
-                        f"received KSh {transaction.amount:,.2f}."
-                    )
-
-                    db.flush()
-
-                    children = (
-                        db.query(Transaction)
-                        .filter(
-                            Transaction.parent_transaction_id
-                            == parent.id
-                        )
-                        .all()
-                    )
-
-                    successful_children = [
-                        child
-                        for child in children
-                        if child.status == "approved"
-                    ]
-
-                    failed_children = [
-                        child
-                        for child in children
-                        if child.status in {
-                            "rejected",
-                            "cancelled",
-                        }
-                    ]
-
-                    # A failed child means the complete parent deposit
-                    # cannot be credited.
-                    if failed_children:
-
-                        parent.status = "rejected"
-
-                        parent.description = (
-                            "Split deposit failed because one "
-                            "or more PalPluss payments failed. "
-                            "Wallet was not credited."
-                        )
-
-                    # ONLY HERE is the customer's wallet credited.
-                    # The full parent amount is credited exactly once.
-                    elif (
-                        len(children) == 2
-                        and len(successful_children) == 2
-                        and parent.status == "pending"
-                    ):
-
-                        credit_wallet(
-                            db=db,
-                            wallet=parent.wallet,
-                            amount=Decimal(
-                                str(parent.amount)
-                            ),
-                        )
-
-                        parent.status = "approved"
-
-                        parent.description = (
-                            "Split M-Pesa deposit successful. "
-                            "Both PalPluss accounts confirmed. "
-                            f"Wallet credited once with "
-                            f"KSh {parent.amount:,.2f}."
-                        )
-
-                    else:
-
-                        parent.status = "pending"
-
-                        parent.description = (
-                            "Split deposit partially confirmed. "
-                            f"{len(successful_children)}/2 "
-                            "payments successful. "
-                            "Waiting for the remaining payment."
-                        )
-
-                elif failed:
-
-                    transaction.status = "rejected"
-
-                    transaction.description = (
-                        f"Split deposit payment failed. "
-                        f"PalPluss Account {transaction.split_account} "
-                        "did not complete the payment."
-                    )
-
-                    parent.status = "rejected"
-
-                    parent.description = (
-                        "Split deposit failed because one "
-                        "PalPluss payment was not completed. "
-                        "Wallet was not credited."
-                    )
-
-                else:
-
-                    transaction.status = "pending"
-
-                db.commit()
-
-                return {
-                    "status": "processed",
-                    "transaction_id": transaction.id,
-                    "transaction_status": transaction.status,
-                    "parent_transaction_id": parent.id,
-                    "parent_status": parent.status,
-                }
-
-            # ----------------------------------------------------
-            # LEGACY NON-SPLIT DEPOSIT
-            # ----------------------------------------------------
-
+            # Already credited.
             if transaction.status == "approved":
                 return {
                     "status": "already_processed",
@@ -297,7 +120,6 @@ async def palpluss_webhook(request: Request):
             )
 
             if success:
-
                 credit_wallet(
                     db=db,
                     wallet=transaction.wallet,
@@ -314,7 +136,6 @@ async def palpluss_webhook(request: Request):
                 )
 
             elif failed:
-
                 transaction.status = "rejected"
 
                 transaction.description = (
@@ -322,7 +143,6 @@ async def palpluss_webhook(request: Request):
                 )
 
             else:
-
                 transaction.status = "pending"
 
             db.commit()

@@ -35,11 +35,7 @@ def get_transactions(
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
-    # Split-payment child records are internal bookkeeping only.
-    # The admin panel displays the single parent transaction.
-    query = db.query(Transaction).filter(
-        Transaction.parent_transaction_id.is_(None)
-    )
+    query = db.query(Transaction)
 
     if transaction_type:
         query = query.filter(
@@ -73,13 +69,10 @@ def get_pending_transactions(
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
-    # Split-payment child records are internal bookkeeping only.
-    # The admin panel displays the single parent transaction.
     return (
         db.query(Transaction)
         .filter(
-            Transaction.status == "pending",
-            Transaction.parent_transaction_id.is_(None),
+            Transaction.status == "pending"
         )
         .order_by(Transaction.created_at.asc())
         .all()
@@ -105,19 +98,6 @@ def update_transaction(
         raise HTTPException(
             status_code=404,
             detail="Transaction not found",
-        )
-
-    # Split-payment child records are internal bookkeeping only.
-    # Their status is controlled by the PalPluss webhook.
-    if transaction.parent_transaction_id is not None:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "This is a split-deposit child transaction. "
-                "Its status is controlled automatically by "
-                "the PalPluss webhook. Manage the parent "
-                "deposit transaction instead."
-            ),
         )
 
     new_status = data.status.lower()
