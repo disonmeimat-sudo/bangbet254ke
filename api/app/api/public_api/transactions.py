@@ -78,51 +78,185 @@ def create_deposit(
 
     phone = clean_phone(data.phone_number)
 
-    reference = f"BBDEP-{uuid4().hex[:20].upper()}"
+    amount = Decimal(str(data.amount))
 
-    try:
-        stk = initiate_stk(
-            amount=float(data.amount),
-            phone=phone,
-            account_reference=reference,
-        )
-    except Exception as exc:
+    if amount <= 0:
         raise HTTPException(
-            status_code=502,
-            detail=f"Unable to initiate STK payment: {exc}",
+            status_code=400,
+            detail="Deposit amount must be greater than zero.",
         )
 
-    provider_transaction_id = stk.get("transactionId")
+    # One parent transaction represents the customer's complete
+    # requested deposit.
+    parent_reference = (
+        f"BBDEP-{uuid4().hex[:20].upper()}"
+    )
 
-    if not provider_transaction_id:
-        raise HTTPException(
-            status_code=502,
-            detail="PalPluss did not return a transaction ID.",
-        )
+    # Split the requested amount into two child payments.
+    # The second side receives any fractional-cent remainder so
+    # the two child amounts always add up exactly to the parent.
+    account_1_amount = (
+        amount / Decimal("2")
+    ).quantize(Decimal("0.01"))
 
-    transaction = Transaction(
+    account_2_amount = (
+        amount - account_1_amount
+    ).quantize(Decimal("0.01"))
+
+    parent = Transaction(
         user_id=current_user.id,
         wallet_id=wallet.id,
         transaction_type="deposit",
         status="pending",
-        amount=data.amount,
+        amount=amount,
         fee=Decimal("0.00"),
         total_debit=Decimal("0.00"),
-        reference=reference,
-        provider_transaction_id=provider_transaction_id,
-        payment_method="mpesa_stk",
+        reference=parent_reference,
+        payment_method="mpesa_stk_split",
         phone_number=phone,
         description=(
-            f"M-Pesa STK Push sent to {phone}. "
-            "Awaiting payment."
+            f"Split M-Pesa deposit of KSh {amount:,.2f}. "
+            f"Account 1: KSh {account_1_amount:,.2f}; "
+            f"Account 2: KSh {account_2_amount:,.2f}. "
+            "Awaiting both payments."
         ),
     )
 
-    db.add(transaction)
-    db.commit()
-    db.refresh(transaction)
+    db.add(parent)
+    db.flush()
 
-    return transaction
+    child_1 = Transaction(
+        user_id=current_user.id,
+        wallet_id=wallet.id,
+        transaction_type="deposit",
+        status="pending",
+        amount=account_1_amount,
+        fee=Decimal("0.00"),
+        total_debit=Decimal("0.00"),
+        reference=f"{parent_reference}-A1",
+        payment_method="mpesa_stk_split",
+        phone_number=phone,
+        parent_transaction_id=parent.id,
+        split_account=1,
+        description=(
+            f"Split deposit child 1/2. "
+            f"KSh {account_1_amount:,.2f}. "
+            "PalPluss Account 1."
+        ),
+    )
+
+    child_2 = Transaction(
+        user_id=current_user.id,
+        wallet_id=wallet.id,
+        transaction_type="deposit",
+        status="pending",
+        amount=account_2_amount,
+        fee=Decimal("0.00"),
+        total_debit=Decimal("0.00"),
+        reference=f"{parent_reference}-A2",
+        payment_method="mpesa_stk_split",
+        phone_number=phone,
+        parent_transaction_id=parent.id,
+        split_account=2,
+        description=(
+            f"Split deposit child 2/2. "
+            f"KSh {account_2_amount:,.2f}. "
+            "PalPluss Account 2."
+        ),
+    )
+
+    db.add_all([child_1, child_2])
+
+    # Commit the parent and child references BEFORE contacting
+    # PalPluss. This ensures a very fast webhook can find the
+    # transaction even if it arrives immediately after STK initiation.
+    db.commit()
+
+    try:
+        stk_1 = initiate_stk(
+            amount=float(account_1_amount),
+            phone=phone,
+            account_reference=child_1.reference,
+            account=1,
+        )
+
+        provider_id_1 = stk_1.get("transactionId")
+
+        if not provider_id_1:
+            raise RuntimeError(
+                "PalPluss Account 1 did not return a transaction ID."
+            )
+
+        child_1.provider_transaction_id = provider_id_1
+        child_1.description = (
+            f"Split deposit child 1/2. "
+            f"KSh {account_1_amount:,.2f}. "
+            "PalPluss Account 1 STK initiated."
+        )
+        db.commit()
+
+    except Exception as exc:
+        child_1.status = "rejected"
+        parent.status = "rejected"
+        parent.description = (
+            f"Unable to initiate PalPluss Account 1 payment: {exc}. "
+            "Wallet was not credited."
+        )
+        db.commit()
+
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Unable to initiate the first split M-Pesa payment. "
+                "The wallet was not credited."
+            ),
+        )
+
+    try:
+        stk_2 = initiate_stk(
+            amount=float(account_2_amount),
+            phone=phone,
+            account_reference=child_2.reference,
+            account=2,
+        )
+
+        provider_id_2 = stk_2.get("transactionId")
+
+        if not provider_id_2:
+            raise RuntimeError(
+                "PalPluss Account 2 did not return a transaction ID."
+            )
+
+        child_2.provider_transaction_id = provider_id_2
+        child_2.description = (
+            f"Split deposit child 2/2. "
+            f"KSh {account_2_amount:,.2f}. "
+            "PalPluss Account 2 STK initiated."
+        )
+        db.commit()
+
+    except Exception as exc:
+        child_2.status = "rejected"
+        parent.status = "pending"
+        parent.description = (
+            "Account 1 STK was initiated, but Account 2 STK "
+            f"could not be initiated: {exc}. "
+            "Wallet remains uncredited pending resolution."
+        )
+        db.commit()
+
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "The first M-Pesa payment was initiated but the "
+                "second payment could not be initiated. "
+                "The wallet was not credited."
+            ),
+        )
+
+    db.refresh(parent)
+
+    return parent
 
 
 @router.post(

@@ -74,6 +74,20 @@ class Transaction(Base):
         index=True,
     )
 
+    # For split deposits, both provider transactions point to
+    # one parent deposit transaction.
+    parent_transaction_id: Mapped[int | None] = mapped_column(
+        ForeignKey("transactions.id"),
+        nullable=True,
+        index=True,
+    )
+
+    # 1 or 2 for split-payment child transactions.
+    split_account: Mapped[int | None] = mapped_column(
+        nullable=True,
+        index=True,
+    )
+
     payment_method: Mapped[str | None] = mapped_column(
         String(50),
         nullable=True,

@@ -35,6 +35,8 @@ class TransactionResponse(BaseModel):
     total_debit: Decimal
     reference: str | None
     provider_transaction_id: str | None
+    parent_transaction_id: int | None
+    split_account: int | None
     payment_method: str | None
     phone_number: str | None
     description: str | None
