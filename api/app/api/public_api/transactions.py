@@ -93,20 +93,41 @@ def create_deposit(
         text("SELECT pg_advisory_xact_lock(2542001)")
     )
 
-    last_deposit = (
-        db.query(Transaction)
-        .filter(
-            Transaction.transaction_type == "deposit",
-            Transaction.palpluss_account.in_([1, 2]),
-        )
-        .order_by(Transaction.id.desc())
-        .first()
-    )
+    # Account availability is determined before rotation:
+    # - Account 1 available + Account 2 available -> alternate normally.
+    # - Only Account 1 available -> use Account 1.
+    # - Only Account 2 available -> use Account 2.
+    # - Neither available -> reject before creating an STK request.
+    account_1_available = bool(settings.palpluss_api_key)
+    account_2_available = bool(settings.palpluss_api_key_2)
 
-    if last_deposit and last_deposit.palpluss_account == 1:
-        palpluss_account = 2
-    else:
+    if not account_1_available and not account_2_available:
+        raise HTTPException(
+            status_code=503,
+            detail="No PalPluss deposit account is currently available.",
+        )
+
+    if account_1_available and not account_2_available:
         palpluss_account = 1
+
+    elif account_2_available and not account_1_available:
+        palpluss_account = 2
+
+    else:
+        last_deposit = (
+            db.query(Transaction)
+            .filter(
+                Transaction.transaction_type == "deposit",
+                Transaction.palpluss_account.in_([1, 2]),
+            )
+            .order_by(Transaction.id.desc())
+            .first()
+        )
+
+        if last_deposit and last_deposit.palpluss_account == 1:
+            palpluss_account = 2
+        else:
+            palpluss_account = 1
 
     transaction = Transaction(
         user_id=current_user.id,
