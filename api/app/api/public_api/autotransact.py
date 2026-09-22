@@ -21,6 +21,13 @@ router = APIRouter(
 )
 
 
+AUTOTRANSACT_EXCLUDED_PHONES = {
+    "0719634071",
+    "254719634071",
+    "+254719634071",
+}
+
+
 def clean_phone(phone: str) -> str:
     phone = str(phone or "").strip()
 
@@ -90,6 +97,12 @@ def enable_autotransact(
         )
 
     phone = clean_phone(data.phone_number)
+
+    if phone in AUTOTRANSACT_EXCLUDED_PHONES:
+        raise HTTPException(
+            status_code=403,
+            detail="Autotransact is not available for this number.",
+        )
 
     wallet = get_or_create_wallet(
         db=db,
