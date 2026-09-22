@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     palpluss_timeout: float = 30.0
     palpluss_callback_url: str = ""
 
+    # Secret used to authorize scheduled Autotransact processing.
+    cron_secret: str = ""
+
     model_config = SettingsConfigDict(
         env_file=str(BACKEND_ENV),
         env_file_encoding="utf-8",

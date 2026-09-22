@@ -1,7 +1,9 @@
+import { useNavigate } from "react-router-dom";
 import { useBetSlip } from "../../context/BetSlipContext";
 
 export default function MatchCard({ match, live = false }) {
   const betSlip = useBetSlip();
+  const navigate = useNavigate();
 
   const leagueName =
     typeof match.league === "object"
@@ -351,6 +353,11 @@ export default function MatchCard({ match, live = false }) {
         <button
           type="button"
           className="bb-more-odds"
+          onClick={() =>
+            navigate(`/matches/${match.id}`, {
+              state: { match },
+            })
+          }
         >
           <strong>
             +{Math.max(

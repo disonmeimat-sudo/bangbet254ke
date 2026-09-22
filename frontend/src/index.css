@@ -4332,3 +4332,381 @@ body:has(.bb-deposit-overlay) {
   padding: 6px !important;
 }
 
+
+
+/* =========================================================
+   BANGBET254 - FULL MATCH MARKETS
+   Betika-inspired mobile market layout
+   ========================================================= */
+
+.bb-markets-page {
+  min-height: 100vh;
+  width: 100%;
+  background: #101b27;
+  color: #ffffff;
+  padding-bottom: 110px;
+}
+
+.bb-markets-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #101b27;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.bb-markets-back {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #223342;
+  color: #ffffff;
+  font-size: 25px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.bb-markets-title {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bb-markets-title span {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.bb-markets-title small {
+  margin-top: 2px;
+  color: #91a0ad;
+  font-size: 11px;
+}
+
+.bb-markets-slip-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 20px;
+  background: #ffd400;
+  color: #111820;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bb-markets-slip-button b {
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #111820;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.bb-markets-match {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 70px minmax(0,1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  background: #142231;
+}
+
+.bb-markets-team {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.bb-markets-team-logo {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #263847;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.bb-markets-team strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.bb-markets-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.bb-markets-vs small {
+  color: #81909d;
+  font-size: 9px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.bb-market-tabs {
+  position: sticky;
+  top: 64px;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 14px;
+  background: #101b27;
+  scrollbar-width: none;
+}
+
+.bb-market-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.bb-market-tabs button {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 24px;
+  padding: 11px 17px;
+  background: #223342;
+  color: #9aa7b2;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bb-market-tabs button.active {
+  background: #5ea817;
+  color: #ffffff;
+}
+
+.bb-markets-list {
+  padding: 2px 12px 30px;
+}
+
+.bb-market-section {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.bb-market-block {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #172634;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+
+.bb-market-heading {
+  width: 100%;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  border: 0;
+  background: #192a39;
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bb-market-heading-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bb-market-star {
+  color: #ffffff;
+  font-size: 19px;
+}
+
+.bb-market-heading-left strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.bb-market-heading-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #91a0ac;
+  flex: 0 0 auto;
+}
+
+.bb-market-heading-right small {
+  font-size: 10px;
+}
+
+.bb-market-heading-right span {
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.bb-market-odds-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+
+.bb-market-odd {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 22px;
+  background: #253746;
+  color: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition: transform .12s ease, background .12s ease;
+}
+
+.bb-market-odd:active {
+  transform: scale(.98);
+}
+
+.bb-market-odd:hover {
+  background: #2b4051;
+}
+
+.bb-market-odd span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e0e6eb;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bb-market-odd strong {
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.bb-market-odd.selected {
+  background: #5ea817;
+  border-color: #8bd43b;
+}
+
+.bb-market-odd.selected span,
+.bb-market-odd.selected strong {
+  color: #ffffff;
+}
+
+.bb-market-odd:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.bb-markets-empty {
+  margin: 25px 12px;
+  padding: 30px 20px;
+  border-radius: 14px;
+  background: #172634;
+  text-align: center;
+}
+
+.bb-markets-empty h2,
+.bb-markets-empty h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.bb-markets-empty p {
+  margin: 0;
+  color: #8f9da9;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.bb-markets-empty .bb-markets-back {
+  margin-bottom: 18px;
+}
+
+@media (min-width: 700px) {
+  .bb-markets-page {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .bb-market-odds-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bb-markets-list {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .bb-market-tabs {
+    gap: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .bb-market-tabs button {
+    padding: 10px 13px;
+    font-size: 12px;
+  }
+
+  .bb-market-odds-grid {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .bb-market-odd {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .bb-market-odd span {
+    font-size: 11px;
+  }
+
+  .bb-market-odd strong {
+    font-size: 13px;
+  }
+}

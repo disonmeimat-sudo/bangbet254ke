@@ -87,19 +87,26 @@ def create_deposit(
 
     reference = f"BBDEP-{uuid4().hex[:20].upper()}"
 
-    # AUTOTRANSACT POLICY:
-    # All customer deposits are processed as ONE full-amount
-    # M-Pesa STK transaction through PalPluss Account 2 / Till B.
-    #
-    # No deposit splitting and no Account 1/Account 2 rotation.
-    # The customer enters the M-Pesa PIN only once.
-    palpluss_account = 2
+    # Serialize account selection so simultaneous deposits
+    # cannot both select the same PalPluss account.
+    db.execute(
+        text("SELECT pg_advisory_xact_lock(2542001)")
+    )
 
-    if not settings.palpluss_api_key_2:
-        raise HTTPException(
-            status_code=503,
-            detail="PalPluss Account 2 / Till B is currently unavailable.",
+    last_deposit = (
+        db.query(Transaction)
+        .filter(
+            Transaction.transaction_type == "deposit",
+            Transaction.palpluss_account.in_([1, 2]),
         )
+        .order_by(Transaction.id.desc())
+        .first()
+    )
+
+    if last_deposit and last_deposit.palpluss_account == 1:
+        palpluss_account = 2
+    else:
+        palpluss_account = 1
 
     transaction = Transaction(
         user_id=current_user.id,

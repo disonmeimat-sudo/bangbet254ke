@@ -11,6 +11,7 @@ import Transactions from "./pages/user/Transactions";
 import Profile from "./pages/user/Profile";
 import UserDashboard from "./pages/user/Dashboard";
 import MyBets from "./pages/user/MyBets";
+import MatchMarkets from "./pages/user/MatchMarkets";
 
 import Dashboard from "./pages/admin/Dashboard";
 import Leagues from "./pages/admin/Leagues";
@@ -30,6 +31,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/matches" element={<Matches />} />
+        <Route path="/matches/:matchId" element={<MatchMarkets />} />
         <Route path="/live" element={<Live />} />
 
         <Route path="/login" element={<Login />} />

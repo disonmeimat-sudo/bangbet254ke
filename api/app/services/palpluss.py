@@ -33,6 +33,7 @@ def initiate_stk(
     phone: str,
     account_reference: str,
     account: int = 1,
+    transaction_desc: str = "BangBet254 Wallet Deposit",
 ):
     client = get_palpluss_client(account)
 
@@ -43,7 +44,7 @@ def initiate_stk(
             amount=amount,
             phone=phone,
             account_reference=account_reference,
-            transaction_desc="BangBet254 Wallet Deposit",
+            transaction_desc=transaction_desc,
             channel_id=channel_id or None,
             callback_url=settings.palpluss_callback_url or None,
         )

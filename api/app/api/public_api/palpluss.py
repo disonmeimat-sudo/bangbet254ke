@@ -4,7 +4,12 @@ from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
+from app.models.autotransact import Autotransact
 from app.models.transaction import Transaction
+from app.services.autotransact import (
+    is_insufficient_funds,
+    start_fallback_collection,
+)
 from app.services.wallet import credit_wallet, debit_wallet
 
 
@@ -39,17 +44,16 @@ async def palpluss_webhook(request: Request):
 
     event_type = payload.get("event_type")
 
-    transaction_data = (
-        payload.get("transaction") or {}
-    )
+    transaction_data = payload.get("transaction") or {}
 
-    provider_transaction_id = transaction_data.get(
-        "id"
-    )
+    provider_transaction_id = transaction_data.get("id")
 
     provider_status = str(
         transaction_data.get("status") or ""
     ).lower()
+
+    result_code = transaction_data.get("result_code")
+    result_desc = transaction_data.get("result_desc")
 
     external_reference = (
         transaction_data.get("external_reference")
@@ -66,7 +70,6 @@ async def palpluss_webhook(request: Request):
     db: Session = SessionLocal()
 
     try:
-        # First try provider transaction ID.
         transaction = (
             db.query(Transaction)
             .filter(
@@ -77,7 +80,6 @@ async def palpluss_webhook(request: Request):
             .first()
         )
 
-        # Fallback to our own reference.
         if transaction is None and external_reference:
             transaction = (
                 db.query(Transaction)
@@ -96,12 +98,150 @@ async def palpluss_webhook(request: Request):
             }
 
         # ========================================================
+        # AUTOTRANSACT
+        # ========================================================
+
+        if transaction.transaction_type == "autotransact":
+
+            plan = (
+                db.query(Autotransact)
+                .filter(
+                    Autotransact.user_id
+                    == transaction.user_id
+                )
+                .with_for_update()
+                .first()
+            )
+
+            # A primary collection that already triggered a fallback
+            # must never trigger a second fallback if PalPluss retries
+            # the original webhook.
+            if transaction.status == "fallback_initiated":
+                return {
+                    "status": "already_processed",
+                    "transaction_id": transaction.id,
+                }
+
+            success = (
+                event_type == "transaction.success"
+                or provider_status in SUCCESS_STATUSES
+            )
+
+            failed = (
+                event_type in {
+                    "transaction.failed",
+                    "transaction.cancelled",
+                    "transaction.expired",
+                }
+                or provider_status in FAILED_STATUSES
+            )
+
+            if success:
+                credit_wallet(
+                    db=db,
+                    wallet=transaction.wallet,
+                    amount=Decimal(
+                        str(transaction.amount)
+                    ),
+                )
+
+                transaction.status = "approved"
+
+                transaction.description = (
+                    "Autotransact collection successful. "
+                    f"KSh {transaction.amount:,.2f} "
+                    "credited to wallet through "
+                    "PalPluss Account 2 / Till B."
+                )
+
+                if plan:
+                    from datetime import datetime, timedelta, timezone
+
+                    now = datetime.now(timezone.utc)
+
+                    plan.enabled = True
+                    plan.status = "active"
+                    plan.fallback_attempted = False
+                    plan.current_cycle_reference = None
+                    plan.last_run_at = now
+                    plan.next_run_at = (
+                        now
+                        + timedelta(days=plan.interval_days)
+                    )
+                    plan.last_transaction_id = transaction.id
+
+                db.commit()
+
+                return {
+                    "status": "processed",
+                    "transaction_id": transaction.id,
+                    "transaction_status": transaction.status,
+                }
+
+            if failed:
+                if plan and is_insufficient_funds(
+                    result_code=result_code,
+                    result_desc=result_desc,
+                ):
+                    transaction.description = (
+                        "Primary Autotransact collection failed "
+                        "because of insufficient customer funds. "
+                        f"Provider code: {result_code}. "
+                        f"Provider message: {result_desc or 'N/A'}"
+                    )
+
+                    db.flush()
+
+                    result = start_fallback_collection(
+                        db=db,
+                        plan=plan,
+                        primary_transaction=transaction,
+                    )
+
+                    return result
+
+                transaction.status = "rejected"
+
+                transaction.description = (
+                    "Autotransact collection failed. "
+                    f"Provider code: {result_code or 'N/A'}. "
+                    f"Provider message: "
+                    f"{result_desc or 'N/A'}"
+                )
+
+                if plan:
+                    plan.status = "active"
+                    plan.current_cycle_reference = None
+
+                db.commit()
+
+                return {
+                    "status": "processed",
+                    "transaction_id": transaction.id,
+                    "transaction_status": transaction.status,
+                }
+
+            transaction.status = "processing"
+
+            transaction.description = (
+                "Autotransact collection is still processing. "
+                f"Provider code: {result_code or 'N/A'}."
+            )
+
+            db.commit()
+
+            return {
+                "status": "processed",
+                "transaction_id": transaction.id,
+                "transaction_status": transaction.status,
+            }
+
+        # ========================================================
         # DEPOSIT
         # ========================================================
 
         if transaction.transaction_type == "deposit":
 
-            # Already credited.
             if transaction.status == "approved":
                 return {
                     "status": "already_processed",
@@ -161,7 +301,6 @@ async def palpluss_webhook(request: Request):
 
         if transaction.transaction_type == "withdrawal":
 
-            # A withdrawal is already financially completed.
             if transaction.status == "approved":
                 return {
                     "status": "already_processed",
@@ -183,7 +322,6 @@ async def palpluss_webhook(request: Request):
 
             if success:
 
-                # Make sure the wallet still has the full amount.
                 if transaction.wallet.balance < transaction.total_debit:
                     transaction.status = "failed"
                     transaction.description = (
@@ -199,7 +337,6 @@ async def palpluss_webhook(request: Request):
                         "transaction_id": transaction.id,
                     }
 
-                # Debit withdrawal amount + company fee.
                 debit_wallet(
                     db=db,
                     wallet=transaction.wallet,

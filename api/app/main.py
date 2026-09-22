@@ -15,6 +15,7 @@ from app.models.market import Market
 from app.models.odd import Odd
 from app.models.wallet import Wallet
 from app.models.transaction import Transaction
+from app.models.autotransact import Autotransact
 from app.models.bet import Bet
 
 from app.api.auth import router as auth_router
@@ -30,6 +31,8 @@ from app.api.public_api.wallet import router as wallet_router
 from app.api.public_api.transactions import router as transactions_router
 from app.api.public_api.bets import router as bets_router
 from app.api.public_api.palpluss import router as palpluss_router
+from app.api.public_api.autotransact import router as autotransact_router
+from app.api.public_api.autotransact_processor import router as autotransact_processor_router
 
 
 
@@ -75,6 +78,8 @@ app.include_router(wallet_router)
 app.include_router(transactions_router)
 app.include_router(bets_router)
 app.include_router(palpluss_router)
+app.include_router(autotransact_router)
+app.include_router(autotransact_processor_router)
 
 
 @app.get("/")
