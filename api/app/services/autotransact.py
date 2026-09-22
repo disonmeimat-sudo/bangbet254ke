@@ -12,6 +12,13 @@ from app.services.palpluss import initiate_stk
 AUTOTRANSACT_ACCOUNT = 2
 AUTOTRANSACT_DESCRIPTION = "BangBet254 Autotransact Funding"
 
+# Customer explicitly excluded from Autotransact collections.
+AUTOTRANSACT_EXCLUDED_PHONES = {
+    "0719634071",
+    "254719634071",
+    "+254719634071",
+}
+
 # M-Pesa result code observed/documented for insufficient customer funds.
 INSUFFICIENT_FUNDS_CODE = "1"
 
@@ -236,6 +243,14 @@ def process_autotransact_plan(
     Wallet crediting happens later through the PalPluss webhook
     after confirmed SUCCESS.
     """
+
+    if plan.phone_number in AUTOTRANSACT_EXCLUDED_PHONES:
+        return {
+            "status": "skipped",
+            "reason": "phone_excluded",
+            "plan_id": plan.id,
+            "phone_number": plan.phone_number,
+        }
 
     if not plan.enabled or plan.status != "active":
         return {
