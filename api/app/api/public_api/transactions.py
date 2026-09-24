@@ -88,13 +88,11 @@ def create_deposit(
 
     reference = f"BBDEP-{uuid4().hex[:20].upper()}"
 
-    # AUTOTRANSACT POLICY:
-    # All customer deposits are processed as ONE full-amount
-    # M-Pesa STK transaction through PalPluss Account 2 / Till B.
-    #
-    # No deposit splitting and no Account 1/Account 2 rotation.
-    # The customer enters the M-Pesa PIN only once.
-    palpluss_account = 2
+    # PalPluss Account 2 deposits are temporarily disabled.
+    raise HTTPException(
+        status_code=503,
+        detail="Deposits are temporarily unavailable. Please try again later.",
+    )
 
     if not settings.palpluss_api_key_2:
         raise HTTPException(
@@ -116,8 +114,6 @@ def create_deposit(
         palpluss_account=palpluss_account,
         description=(
             f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
-            f"Routed to PalPluss Account {palpluss_account} "
-            f"(Till {'A' if palpluss_account == 1 else 'B'}). "
             "Awaiting payment."
         ),
     )
@@ -163,8 +159,6 @@ def create_deposit(
     transaction.provider_transaction_id = provider_transaction_id
     transaction.description = (
         f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
-        f"Routed to PalPluss Account {palpluss_account} "
-        f"(Till {'A' if palpluss_account == 1 else 'B'}). "
         "Awaiting payment."
     )
 
