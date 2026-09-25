@@ -1,0 +1,232 @@
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
+from uuid import uuid4
+
+from sqlalchemy.orm import Session
+
+from app.models.autotransact import Autotransact
+from app.models.transaction import Transaction
+from app.services.palpluss import initiate_stk
+
+
+AUTOTRANSACT_ACCOUNT = 2
+AUTOTRANSACT_DESCRIPTION = "BangBet254 Autotransact Funding"
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def build_cycle_reference(plan: Autotransact) -> str:
+    return f"BBAUTO-{plan.id}-{uuid4().hex[:16].upper()}"
+
+
+def process_autotransact_plan(
+    db: Session,
+    plan: Autotransact,
+) -> dict:
+    """
+    Start one Autotransact collection cycle.
+
+    This function only initiates the customer-authorized STK Push.
+    Wallet crediting happens later in the PalPluss webhook after
+    confirmed SUCCESS.
+    """
+
+    if not plan.enabled or plan.status != "active":
+        return {
+            "status": "skipped",
+            "reason": "plan_not_active",
+            "plan_id": plan.id,
+        }
+
+    now = utcnow()
+
+    if plan.next_run_at > now:
+        return {
+            "status": "skipped",
+            "reason": "not_due",
+            "plan_id": plan.id,
+            "next_run_at": plan.next_run_at.isoformat(),
+        }
+
+    # If this plan already has a pending/processing Autotransact,
+    # never start another one.
+    existing = (
+        db.query(Transaction)
+        .filter(
+            Transaction.user_id == plan.user_id,
+            Transaction.transaction_type == "autotransact",
+            Transaction.status.in_(["pending", "processing"]),
+            Transaction.palpluss_account == AUTOTRANSACT_ACCOUNT,
+        )
+        .order_by(Transaction.id.desc())
+        .first()
+    )
+
+    if existing:
+        return {
+            "status": "skipped",
+            "reason": "existing_collection_pending",
+            "plan_id": plan.id,
+            "transaction_id": existing.id,
+        }
+
+    cycle_reference = build_cycle_reference(plan)
+
+    transaction = Transaction(
+        user_id=plan.user_id,
+        wallet_id=plan.wallet_id,
+        transaction_type="autotransact",
+        status="pending",
+        amount=Decimal(str(plan.primary_amount)),
+        fee=Decimal("0.00"),
+        total_debit=Decimal("0.00"),
+        reference=cycle_reference,
+        palpluss_account=AUTOTRANSACT_ACCOUNT,
+        payment_method="mpesa_stk",
+        phone_number=plan.phone_number,
+        description=(
+            "BangBet254 Autotransact collection "
+            f"KSh {Decimal(str(plan.primary_amount)):,.2f}."
+        ),
+    )
+
+    db.add(transaction)
+    db.flush()
+
+    plan.current_cycle_reference = cycle_reference
+    plan.status = "awaiting_payment"
+    plan.last_transaction_id = transaction.id
+
+    db.commit()
+    db.refresh(transaction)
+
+    try:
+        result = initiate_stk(
+            amount=float(plan.primary_amount),
+            phone=plan.phone_number,
+            account_reference=cycle_reference,
+            account=AUTOTRANSACT_ACCOUNT,
+            transaction_desc=AUTOTRANSACT_DESCRIPTION,
+        )
+
+        provider_id = (
+            result.get("transactionId")
+            if isinstance(result, dict)
+            else None
+        )
+
+        if not provider_id:
+            transaction.status = "rejected"
+            transaction.description = (
+                "PalPluss did not return an Autotransact "
+                "transaction ID."
+            )
+            plan.status = "active"
+            plan.current_cycle_reference = None
+
+            db.commit()
+
+            return {
+                "status": "failed",
+                "reason": "missing_provider_transaction_id",
+                "plan_id": plan.id,
+                "transaction_id": transaction.id,
+            }
+
+        transaction.provider_transaction_id = str(provider_id)
+        transaction.status = "processing"
+        transaction.description = (
+            "Autotransact STK Push initiated through "
+            "PalPluss Account 2 / Till B. "
+            "Waiting for customer authorization."
+        )
+
+        db.commit()
+
+        return {
+            "status": "initiated",
+            "plan_id": plan.id,
+            "transaction_id": transaction.id,
+            "provider_transaction_id": str(provider_id),
+            "amount": str(transaction.amount),
+            "account": AUTOTRANSACT_ACCOUNT,
+        }
+
+    except Exception as exc:
+        db.rollback()
+
+        transaction = db.get(Transaction, transaction.id)
+        plan = db.get(Autotransact, plan.id)
+
+        if transaction:
+            transaction.status = "rejected"
+            transaction.description = (
+                "Autotransact STK initiation failed: "
+                f"{str(exc)[:500]}"
+            )
+
+        if plan:
+            plan.status = "active"
+            plan.current_cycle_reference = None
+
+        db.commit()
+
+        return {
+            "status": "failed",
+            "reason": "palpluss_error",
+            "plan_id": plan.id if plan else None,
+            "transaction_id": transaction.id if transaction else None,
+        }
+
+
+def process_due_autotransacts(
+    db: Session,
+    limit: int = 20,
+) -> dict:
+    """
+    Find due active plans and initiate at most `limit` collections.
+    """
+
+    now = utcnow()
+
+    plans = (
+        db.query(Autotransact)
+        .filter(
+            Autotransact.enabled.is_(True),
+            Autotransact.status == "active",
+            Autotransact.next_run_at <= now,
+        )
+        .order_by(Autotransact.next_run_at.asc())
+        .limit(limit)
+        .all()
+    )
+
+    results = []
+
+    for plan in plans:
+        try:
+            results.append(
+                process_autotransact_plan(
+                    db=db,
+                    plan=plan,
+                )
+            )
+        except Exception as exc:
+            db.rollback()
+
+            results.append(
+                {
+                    "status": "failed",
+                    "reason": "processor_error",
+                    "plan_id": plan.id,
+                    "error": str(exc)[:500],
+                }
+            )
+
+    return {
+        "status": "processed",
+        "checked": len(plans),
+        "results": results,
+    }
