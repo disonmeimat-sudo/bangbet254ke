@@ -10,3 +10,5 @@ bcrypt
 
 palpluss==0.1.0
 psycopg[binary]
+
+psycopg[binary]
