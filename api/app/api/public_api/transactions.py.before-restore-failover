@@ -88,171 +88,84 @@ def create_deposit(
 
     reference = f"BBDEP-{uuid4().hex[:20].upper()}"
 
-    # Serialize account selection so simultaneous deposits cannot
-    # accidentally select the same PalPluss account.
-    try:
-        db.execute(text("SELECT pg_advisory_xact_lock(2542001)"))
+    # PalPluss Account 2 deposits are temporarily disabled.
+    raise HTTPException(
+        status_code=503,
+        detail="Deposits are temporarily unavailable. Please try again later.",
+    )
 
-        last_deposit = (
-            db.query(Transaction)
-            .filter(
-                Transaction.transaction_type == "deposit",
-                Transaction.palpluss_account.in_([1, 2]),
-            )
-            .order_by(Transaction.id.desc())
-            .first()
-        )
-
-        # Alternate:
-        # first -> Account 1
-        # second -> Account 2
-        # third -> Account 1
-        # fourth -> Account 2
-        if last_deposit and last_deposit.palpluss_account == 1:
-            preferred_account = 2
-        else:
-            preferred_account = 1
-
-        alternate_account = 2 if preferred_account == 1 else 1
-
-    except Exception:
-        # If advisory locking is unavailable, still provide a safe
-        # deterministic fallback based on the latest deposit.
-        last_deposit = (
-            db.query(Transaction)
-            .filter(
-                Transaction.transaction_type == "deposit",
-                Transaction.palpluss_account.in_([1, 2]),
-            )
-            .order_by(Transaction.id.desc())
-            .first()
-        )
-
-        if last_deposit and last_deposit.palpluss_account == 1:
-            preferred_account = 2
-        else:
-            preferred_account = 1
-
-        alternate_account = 2 if preferred_account == 1 else 1
-
-    def account_available(account: int) -> bool:
-        if account == 1:
-            return bool(settings.palpluss_api_key)
-        return bool(settings.palpluss_api_key_2)
-
-    # Prefer the alternating account, but automatically fail over to
-    # the other account if its credentials are not configured.
-    if account_available(preferred_account):
-        accounts_to_try = [preferred_account, alternate_account]
-    elif account_available(alternate_account):
-        accounts_to_try = [alternate_account]
-    else:
+    if not settings.palpluss_api_key_2:
         raise HTTPException(
             status_code=503,
-            detail=(
-                "Both PalPluss deposit accounts are currently unavailable."
-            ),
+            detail="PalPluss Account 2 / Till B is currently unavailable.",
         )
 
-    last_error = None
-
-    for palpluss_account in accounts_to_try:
-        transaction = Transaction(
-            user_id=current_user.id,
-            wallet_id=wallet.id,
-            transaction_type="deposit",
-            status="pending",
-            amount=data.amount,
-            fee=Decimal("0.00"),
-            total_debit=Decimal("0.00"),
-            reference=reference,
-            payment_method="mpesa_stk",
-            phone_number=phone,
-            palpluss_account=palpluss_account,
-            description=(
-                f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
-                f"PalPluss Account {palpluss_account} / "
-                f"Till {'A' if palpluss_account == 1 else 'B'}. "
-                "Awaiting payment."
-            ),
-        )
-
-        db.add(transaction)
-        db.commit()
-        db.refresh(transaction)
-
-        try:
-            stk = initiate_stk(
-                amount=float(data.amount),
-                phone=phone,
-                account_reference=reference,
-                account=palpluss_account,
-            )
-
-            provider_transaction_id = (
-                stk.get("transactionId")
-                if isinstance(stk, dict)
-                else None
-            )
-
-            if not provider_transaction_id:
-                transaction.status = "rejected"
-                transaction.description = (
-                    f"PalPluss Account {palpluss_account} did not return "
-                    "a transaction ID."
-                )
-                db.commit()
-
-                last_error = (
-                    f"PalPluss Account {palpluss_account} did not return "
-                    "a transaction ID."
-                )
-
-                # Try the other account if one exists.
-                continue
-
-            transaction.provider_transaction_id = str(
-                provider_transaction_id
-            )
-            transaction.description = (
-                f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
-                f"Routed through PalPluss Account {palpluss_account} / "
-                f"Till {'A' if palpluss_account == 1 else 'B'}. "
-                "Awaiting payment."
-            )
-
-            db.commit()
-            db.refresh(transaction)
-
-            return transaction
-
-        except Exception as exc:
-            db.rollback()
-
-            transaction = db.get(Transaction, transaction.id)
-
-            if transaction:
-                transaction.status = "rejected"
-                transaction.description = (
-                    f"PalPluss Account {palpluss_account} failed to "
-                    f"initiate the STK Push: {str(exc)[:500]}"
-                )
-                db.commit()
-
-            last_error = (
-                f"PalPluss Account {palpluss_account} failed: {exc}"
-            )
-
-            # Automatically continue to the other configured account.
-            continue
-
-    raise HTTPException(
-        status_code=502,
-        detail=(
-            "Unable to initiate the M-Pesa STK payment through either "
-            f"PalPluss account. {last_error or ''}"
-        ).strip(),
+    transaction = Transaction(
+        user_id=current_user.id,
+        wallet_id=wallet.id,
+        transaction_type="deposit",
+        status="pending",
+        amount=data.amount,
+        fee=Decimal("0.00"),
+        total_debit=Decimal("0.00"),
+        reference=reference,
+        payment_method="mpesa_stk",
+        phone_number=phone,
+        palpluss_account=palpluss_account,
+        description=(
+            f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
+            "Awaiting payment."
+        ),
     )
+
+    db.add(transaction)
+    db.commit()
+    db.refresh(transaction)
+
+    try:
+        stk = initiate_stk(
+            amount=float(data.amount),
+            phone=phone,
+            account_reference=reference,
+            account=palpluss_account,
+        )
+    except Exception as exc:
+        transaction.status = "rejected"
+        transaction.description = (
+            f"Unable to initiate M-Pesa STK Push through "
+            f"PalPluss Account {palpluss_account}: {exc}"
+        )
+        db.commit()
+
+        raise HTTPException(
+            status_code=502,
+            detail=f"Unable to initiate STK payment: {exc}",
+        )
+
+    provider_transaction_id = stk.get("transactionId")
+
+    if not provider_transaction_id:
+        transaction.status = "rejected"
+        transaction.description = (
+            "PalPluss did not return a transaction ID."
+        )
+        db.commit()
+
+        raise HTTPException(
+            status_code=502,
+            detail="PalPluss did not return a transaction ID.",
+        )
+
+    transaction.provider_transaction_id = provider_transaction_id
+    transaction.description = (
+        f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
+        "Awaiting payment."
+    )
+
+    db.commit()
+    db.refresh(transaction)
+
+    return transaction
 
 
 @router.post(
