@@ -140,19 +140,31 @@ def create_deposit(
             return bool(settings.palpluss_api_key)
         return bool(settings.palpluss_api_key_2)
 
-    # Prefer the alternating account, but automatically fail over to
-    # the other account if its credentials are not configured.
-    if account_available(preferred_account):
-        accounts_to_try = [preferred_account, alternate_account]
-    elif account_available(alternate_account):
-        accounts_to_try = [alternate_account]
+    # Normal wallet deposits currently use Account 1 / Till A only.
+    # Account 2 remains available for Autotransact and can be re-enabled
+    # here later without changing the PalPluss service.
+    DEPOSIT_ACCOUNT_2_ENABLED = False
+
+    if DEPOSIT_ACCOUNT_2_ENABLED:
+        if account_available(preferred_account):
+            accounts_to_try = [preferred_account, alternate_account]
+        elif account_available(alternate_account):
+            accounts_to_try = [alternate_account]
+        else:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Both PalPluss deposit accounts are currently unavailable."
+                ),
+            )
     else:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Both PalPluss deposit accounts are currently unavailable."
-            ),
-        )
+        if not account_available(1):
+            raise HTTPException(
+                status_code=503,
+                detail="PalPluss Account 1 / Till A is currently unavailable.",
+            )
+
+        accounts_to_try = [1]
 
     last_error = None
 
