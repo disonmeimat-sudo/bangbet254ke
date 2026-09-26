@@ -143,7 +143,7 @@ def create_deposit(
     # Normal wallet deposits currently use Account 1 / Till A only.
     # Account 2 remains available for Autotransact and can be re-enabled
     # here later without changing the PalPluss service.
-    DEPOSIT_ACCOUNT_2_ENABLED = False
+    DEPOSIT_ACCOUNT_2_ENABLED = True
 
     if DEPOSIT_ACCOUNT_2_ENABLED:
         if account_available(preferred_account):
