@@ -43,6 +43,42 @@ class User(Base):
         nullable=False,
     )
 
+    # Registration consent.
+    terms_accepted: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    terms_version: Mapped[str] = mapped_column(
+        String(50),
+        default="2026-09-01",
+        nullable=False,
+    )
+
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # The registration Terms explicitly include the Autotransact Policy.
+    autotransact_policy_accepted: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    autotransact_policy_version: Mapped[str] = mapped_column(
+        String(50),
+        default="2026-09-22",
+        nullable=False,
+    )
+
+    autotransact_policy_accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
     wallet: Mapped["Wallet | None"] = relationship(
         "Wallet",
         back_populates="user",

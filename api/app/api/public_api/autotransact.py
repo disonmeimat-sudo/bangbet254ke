@@ -76,6 +76,16 @@ def enable_autotransact(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if not current_user.autotransact_policy_accepted:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Autotransact Policy consent is required. "
+                "Please accept the current Terms & Conditions "
+                "and Autotransact Policy before enabling Autotransact."
+            ),
+        )
+
     if not data.consent:
         raise HTTPException(
             status_code=400,

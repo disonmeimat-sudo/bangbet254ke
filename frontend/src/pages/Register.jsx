@@ -212,8 +212,14 @@ export default function Register() {
                 I agree to the{" "}
                 <span style={styles.termsLink}>
                   Terms & Conditions
-                </span>{" "}
-                and understand that betting involves financial risk.
+                </span>
+                , including the{" "}
+                <span style={styles.termsLink}>
+                  Autotransact Policy
+                </span>
+                , and understand that Autotransact may initiate
+                M-Pesa collections according to the policy and
+                settings I choose.
               </span>
             </label>
 

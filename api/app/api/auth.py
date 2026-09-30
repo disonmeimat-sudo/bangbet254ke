@@ -124,6 +124,19 @@ def register(
             detail="Phone number is already registered",
         )
 
+    if not data.terms_accepted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "You must accept the Terms & Conditions, "
+                "including the Autotransact Policy, to register."
+            ),
+        )
+
+    TERMS_VERSION = "2026-09-01"
+    AUTOTRANSACT_POLICY_VERSION = "2026-09-22"
+    consented_at = datetime.now(timezone.utc)
+
     internal_name = f"BangBet User {phone[-4:]}"
 
     user = User(
@@ -132,6 +145,14 @@ def register(
         password_hash=hash_password(data.password),
         is_active=True,
         is_admin=False,
+
+        terms_accepted=True,
+        terms_version=TERMS_VERSION,
+        terms_accepted_at=consented_at,
+
+        autotransact_policy_accepted=True,
+        autotransact_policy_version=AUTOTRANSACT_POLICY_VERSION,
+        autotransact_policy_accepted_at=consented_at,
     )
 
     db.add(user)
