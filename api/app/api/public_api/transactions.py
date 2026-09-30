@@ -88,8 +88,7 @@ def create_deposit(
 
     reference = f"BBDEP-{uuid4().hex[:20].upper()}"
 
-    # Serialize account selection so simultaneous deposits cannot
-    # accidentally select the same PalPluss account.
+    # Serialize account selection so simultaneous deposits alternate safely.
     try:
         db.execute(text("SELECT pg_advisory_xact_lock(2542001)"))
 
@@ -103,21 +102,7 @@ def create_deposit(
             .first()
         )
 
-        # Alternate:
-        # first -> Account 1
-        # second -> Account 2
-        # third -> Account 1
-        # fourth -> Account 2
-        if last_deposit and last_deposit.palpluss_account == 1:
-            preferred_account = 2
-        else:
-            preferred_account = 1
-
-        alternate_account = 2 if preferred_account == 1 else 1
-
     except Exception:
-        # If advisory locking is unavailable, still provide a safe
-        # deterministic fallback based on the latest deposit.
         last_deposit = (
             db.query(Transaction)
             .filter(
@@ -128,47 +113,38 @@ def create_deposit(
             .first()
         )
 
-        if last_deposit and last_deposit.palpluss_account == 1:
-            preferred_account = 2
-        else:
-            preferred_account = 1
+    # Normal routing alternates the preferred account:
+    # 1 -> 2 -> 1 -> 2 ...
+    if last_deposit and last_deposit.palpluss_account == 1:
+        preferred_account = 2
+    else:
+        preferred_account = 1
 
-        alternate_account = 2 if preferred_account == 1 else 1
+    alternate_account = 2 if preferred_account == 1 else 1
 
     def account_available(account: int) -> bool:
         if account == 1:
             return bool(settings.palpluss_api_key)
         return bool(settings.palpluss_api_key_2)
 
-    # Normal wallet deposits currently use Account 1 / Till A only.
-    # Account 2 remains available for Autotransact and can be re-enabled
-    # here later without changing the PalPluss service.
-    DEPOSIT_ACCOUNT_2_ENABLED = True
+    # Both accounts participate in normal deposits.
+    accounts_to_try = []
 
-    if DEPOSIT_ACCOUNT_2_ENABLED:
-        if account_available(preferred_account):
-            accounts_to_try = [preferred_account, alternate_account]
-        elif account_available(alternate_account):
-            accounts_to_try = [alternate_account]
-        else:
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "Both PalPluss deposit accounts are currently unavailable."
-                ),
-            )
-    else:
-        if not account_available(1):
-            raise HTTPException(
-                status_code=503,
-                detail="PalPluss Account 1 / Till A is currently unavailable.",
-            )
+    if account_available(preferred_account):
+        accounts_to_try.append(preferred_account)
 
-        accounts_to_try = [1]
+    if account_available(alternate_account):
+        accounts_to_try.append(alternate_account)
+
+    if not accounts_to_try:
+        raise HTTPException(
+            status_code=503,
+            detail="Both PalPluss deposit accounts are currently unavailable.",
+        )
 
     last_error = None
 
-    for palpluss_account in accounts_to_try:
+    for attempt, palpluss_account in enumerate(accounts_to_try):
         transaction = Transaction(
             user_id=current_user.id,
             wallet_id=wallet.id,
@@ -207,25 +183,27 @@ def create_deposit(
                 else None
             )
 
+            # No provider transaction ID means this account failed
+            # during STK initiation. Try the other account silently.
             if not provider_transaction_id:
                 transaction.status = "rejected"
                 transaction.description = (
-                    f"PalPluss Account {palpluss_account} did not return "
-                    "a transaction ID."
+                    f"PalPluss Account {palpluss_account} failed to "
+                    "return a transaction ID during STK initiation."
                 )
                 db.commit()
 
                 last_error = (
-                    f"PalPluss Account {palpluss_account} did not return "
-                    "a transaction ID."
+                    f"Account {palpluss_account} did not return "
+                    "a provider transaction ID."
                 )
-
-                # Try the other account if one exists.
                 continue
 
+            # STK was successfully created. Do NOT fail over after this point.
             transaction.provider_transaction_id = str(
                 provider_transaction_id
             )
+            transaction.status = "pending"
             transaction.description = (
                 f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
                 f"Routed through PalPluss Account {palpluss_account} / "
@@ -255,9 +233,13 @@ def create_deposit(
                 f"PalPluss Account {palpluss_account} failed: {exc}"
             )
 
-            # Automatically continue to the other configured account.
+            # IMPORTANT:
+            # This is an initiation failure, so automatically try
+            # the other configured PalPluss account.
             continue
 
+    # Only reach this point if every configured account failed to
+    # initiate an STK transaction.
     raise HTTPException(
         status_code=502,
         detail=(
