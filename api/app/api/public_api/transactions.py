@@ -88,38 +88,26 @@ def create_deposit(
 
     reference = f"BBDEP-{uuid4().hex[:20].upper()}"
 
-    # Serialize account selection so simultaneous deposits alternate safely.
+    # Determine the preferred account. Normal deposits alternate:
+    # Account 1 -> Account 2 -> Account 1 -> Account 2 ...
     try:
         db.execute(text("SELECT pg_advisory_xact_lock(2542001)"))
-
-        last_deposit = (
-            db.query(Transaction)
-            .filter(
-                Transaction.transaction_type == "deposit",
-                Transaction.palpluss_account.in_([1, 2]),
-            )
-            .order_by(Transaction.id.desc())
-            .first()
-        )
-
     except Exception:
-        last_deposit = (
-            db.query(Transaction)
-            .filter(
-                Transaction.transaction_type == "deposit",
-                Transaction.palpluss_account.in_([1, 2]),
-            )
-            .order_by(Transaction.id.desc())
-            .first()
+        pass
+
+    last_deposit = (
+        db.query(Transaction)
+        .filter(
+            Transaction.transaction_type == "deposit",
+            Transaction.palpluss_account.in_([1, 2]),
         )
+        .order_by(Transaction.id.desc())
+        .first()
+    )
 
-    # Normal routing alternates the preferred account:
-    # 1 -> 2 -> 1 -> 2 ...
-    if last_deposit and last_deposit.palpluss_account == 1:
-        preferred_account = 2
-    else:
-        preferred_account = 1
-
+    preferred_account = (
+        2 if last_deposit and last_deposit.palpluss_account == 1 else 1
+    )
     alternate_account = 2 if preferred_account == 1 else 1
 
     def account_available(account: int) -> bool:
@@ -127,24 +115,23 @@ def create_deposit(
             return bool(settings.palpluss_api_key)
         return bool(settings.palpluss_api_key_2)
 
-    # Both accounts participate in normal deposits.
-    accounts_to_try = []
-
-    if account_available(preferred_account):
-        accounts_to_try.append(preferred_account)
-
-    if account_available(alternate_account):
-        accounts_to_try.append(alternate_account)
+    # Always try the preferred account first, then silently retry
+    # with the other account if STK initiation fails.
+    accounts_to_try = [
+        account
+        for account in (preferred_account, alternate_account)
+        if account_available(account)
+    ]
 
     if not accounts_to_try:
         raise HTTPException(
             status_code=503,
-            detail="Both PalPluss deposit accounts are currently unavailable.",
+            detail="M-Pesa deposits are temporarily unavailable.",
         )
 
-    last_error = None
+    errors = []
 
-    for attempt, palpluss_account in enumerate(accounts_to_try):
+    for palpluss_account in accounts_to_try:
         transaction = Transaction(
             user_id=current_user.id,
             wallet_id=wallet.id,
@@ -183,23 +170,23 @@ def create_deposit(
                 else None
             )
 
-            # No provider transaction ID means this account failed
-            # during STK initiation. Try the other account silently.
+            # No provider transaction ID means STK initiation failed.
+            # Do NOT return an error to the customer. Try the other account.
             if not provider_transaction_id:
                 transaction.status = "rejected"
                 transaction.description = (
-                    f"PalPluss Account {palpluss_account} failed to "
-                    "return a transaction ID during STK initiation."
+                    f"PalPluss Account {palpluss_account} did not "
+                    "return a provider transaction ID. Retrying "
+                    "with the other PalPluss account."
                 )
                 db.commit()
 
-                last_error = (
-                    f"Account {palpluss_account} did not return "
-                    "a provider transaction ID."
+                errors.append(
+                    f"Account {palpluss_account}: no provider transaction ID"
                 )
                 continue
 
-            # STK was successfully created. Do NOT fail over after this point.
+            # STK was successfully created. Stop failover here.
             transaction.provider_transaction_id = str(
                 provider_transaction_id
             )
@@ -217,35 +204,36 @@ def create_deposit(
             return transaction
 
         except Exception as exc:
+            # This account failed during INITIATION.
+            # Record it, then silently retry the other account.
             db.rollback()
 
-            transaction = db.get(Transaction, transaction.id)
+            failed_transaction = db.get(Transaction, transaction.id)
 
-            if transaction:
-                transaction.status = "rejected"
-                transaction.description = (
-                    f"PalPluss Account {palpluss_account} failed to "
-                    f"initiate the STK Push: {str(exc)[:500]}"
+            if failed_transaction:
+                failed_transaction.status = "rejected"
+                failed_transaction.description = (
+                    f"PalPluss Account {palpluss_account} STK initiation "
+                    f"failed. Automatic retry with the other account. "
+                    f"Error: {str(exc)[:400]}"
                 )
                 db.commit()
 
-            last_error = (
-                f"PalPluss Account {palpluss_account} failed: {exc}"
+            errors.append(
+                f"Account {palpluss_account}: {str(exc)[:400]}"
             )
 
             # IMPORTANT:
-            # This is an initiation failure, so automatically try
-            # the other configured PalPluss account.
+            # Never return here. The next configured account gets a chance.
             continue
 
-    # Only reach this point if every configured account failed to
-    # initiate an STK transaction.
+    # Both configured accounts failed during STK initiation.
     raise HTTPException(
         status_code=502,
         detail=(
-            "Unable to initiate the M-Pesa STK payment through either "
-            f"PalPluss account. {last_error or ''}"
-        ).strip(),
+            "Unable to initiate the M-Pesa payment. "
+            "Both payment accounts failed."
+        ),
     )
 
 
