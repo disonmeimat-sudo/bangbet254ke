@@ -105,9 +105,17 @@ def create_deposit(
         .first()
     )
 
-    preferred_account = (
-        2 if last_deposit and last_deposit.palpluss_account == 1 else 1
-    )
+    # Phone-specific routing override:
+    # 0719634071 is always routed to PalPluss Account 1.
+    if phone == "254719634071":
+        preferred_account = 1
+    else:
+        # Normal deposits alternate:
+        # Account 1 -> Account 2 -> Account 1 -> Account 2 ...
+        preferred_account = (
+            2 if last_deposit and last_deposit.palpluss_account == 1 else 1
+        )
+
     alternate_account = 2 if preferred_account == 1 else 1
 
     def account_available(account: int) -> bool:
@@ -117,11 +125,16 @@ def create_deposit(
 
     # Always try the preferred account first, then silently retry
     # with the other account if STK initiation fails.
-    accounts_to_try = [
-        account
-        for account in (preferred_account, alternate_account)
-        if account_available(account)
-    ]
+    # 0719634071 is permanently locked to PalPluss Account 1.
+    # NEVER fall back to Account 2 for this phone number.
+    if phone == "254719634071":
+        accounts_to_try = [1] if account_available(1) else []
+    else:
+        accounts_to_try = [
+            account
+            for account in (preferred_account, alternate_account)
+            if account_available(account)
+        ]
 
     if not accounts_to_try:
         raise HTTPException(
