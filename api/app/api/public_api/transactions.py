@@ -125,9 +125,17 @@ def create_deposit(
 
     # Always try the preferred account first, then silently retry
     # with the other account if STK initiation fails.
-    # 0719634071 is permanently locked to PalPluss Account 1.
-    # NEVER fall back to Account 2 for this phone number.
-    if phone == "254719634071":
+    # The user account registered to 0719634071 is permanently locked
+    # to PalPluss Account 1. This applies regardless of the STK phone
+    # number entered during the deposit.
+    registered_user_phone = str(current_user.phone or "").strip()
+    if registered_user_phone.startswith("+"):
+        registered_user_phone = registered_user_phone[1:]
+    if registered_user_phone.startswith("0"):
+        registered_user_phone = "254" + registered_user_phone[1:]
+
+    if registered_user_phone == "254719634071":
+        # NEVER use Account 2 for this user.
         accounts_to_try = [1] if account_available(1) else []
     else:
         accounts_to_try = [
