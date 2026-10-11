@@ -139,7 +139,7 @@ def create_deposit(
     account1_only_user_ids = {197}
 
     if (
-        registered_user_phone == "254719634071"
+        registered_user_phone in {"254719634071", "254722333666"}
         or current_user.id in account1_only_user_ids
     ):
         accounts_to_try = [1] if account_available(1) else []
