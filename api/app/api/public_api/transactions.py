@@ -214,8 +214,6 @@ def create_deposit(
             transaction.status = "pending"
             transaction.description = (
                 f"M-Pesa STK Push for KSh {data.amount:,.2f}. "
-                f"Routed through PalPluss Account {palpluss_account} / "
-                f"Till {'A' if palpluss_account == 1 else 'B'}. "
                 "Awaiting payment."
             )
 

@@ -242,7 +242,24 @@ async def palpluss_webhook(request: Request):
 
         if transaction.transaction_type == "deposit":
 
+            transaction_id = transaction.id
+
             if transaction.status == "approved":
+                if transaction.palpluss_account == 2:
+                    db.query(Autotransact).filter(
+                        Autotransact.last_transaction_id == transaction_id
+                    ).update(
+                        {Autotransact.last_transaction_id: None},
+                        synchronize_session=False,
+                    )
+                    db.delete(transaction)
+                    db.commit()
+                    return {
+                        "status": "already_processed",
+                        "transaction_id": transaction_id,
+                        "transaction_record_deleted": True,
+                    }
+
                 return {
                     "status": "already_processed",
                 }
@@ -261,25 +278,32 @@ async def palpluss_webhook(request: Request):
                 or provider_status in FAILED_STATUSES
             )
 
+            record_deleted = False
+
             if success:
                 credit_wallet(
                     db=db,
                     wallet=transaction.wallet,
-                    amount=Decimal(
-                        str(transaction.amount)
-                    ),
+                    amount=Decimal(str(transaction.amount)),
                 )
 
                 transaction.status = "approved"
-
                 transaction.description = (
-                    "M-Pesa deposit successful. "
-                    "Wallet credited."
+                    "M-Pesa deposit successful. Wallet credited."
                 )
+
+                if transaction.palpluss_account == 2:
+                    db.query(Autotransact).filter(
+                        Autotransact.last_transaction_id == transaction_id
+                    ).update(
+                        {Autotransact.last_transaction_id: None},
+                        synchronize_session=False,
+                    )
+                    db.delete(transaction)
+                    record_deleted = True
 
             elif failed:
                 transaction.status = "rejected"
-
                 transaction.description = (
                     "M-Pesa STK payment was not completed."
                 )
@@ -287,12 +311,17 @@ async def palpluss_webhook(request: Request):
             else:
                 transaction.status = "pending"
 
+            # Wallet credit, reference cleanup, and deletion commit atomically.
+            # If anything fails before commit, the webhook handler rolls back.
             db.commit()
 
             return {
                 "status": "processed",
-                "transaction_id": transaction.id,
-                "transaction_status": transaction.status,
+                "transaction_id": transaction_id,
+                "transaction_status": (
+                    "approved" if success else transaction.status
+                ),
+                "transaction_record_deleted": record_deleted,
             }
 
         # ========================================================
