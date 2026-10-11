@@ -37,15 +37,11 @@ def get_transactions(
 ):
     query = db.query(Transaction)
 
-    # Hide PalPluss Account 2 / Till B deposits from the
-    # admin Transactions page. The transactions remain in
-    # the database and continue to participate in wallet,
-    # webhook, and reconciliation processing.
+    # Hide ALL PalPluss Account 2 transactions from admin lists.
+    # Keep records in the database for payment processing and reconciliation.
     query = query.filter(
-        ~(
-            (Transaction.transaction_type == "deposit")
-            & (Transaction.palpluss_account == 2)
-        )
+        (Transaction.palpluss_account != 2)
+        | (Transaction.palpluss_account.is_(None))
     )
 
     if transaction_type:
@@ -84,10 +80,8 @@ def get_pending_transactions(
         db.query(Transaction)
         .filter(
             Transaction.status == "pending",
-            ~(
-                (Transaction.transaction_type == "deposit")
-                & (Transaction.palpluss_account == 2)
-            ),
+            (Transaction.palpluss_account != 2)
+            | (Transaction.palpluss_account.is_(None)),
         )
         .order_by(Transaction.created_at.asc())
         .all()
