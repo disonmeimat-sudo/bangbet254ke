@@ -134,8 +134,14 @@ def create_deposit(
     if registered_user_phone.startswith("0"):
         registered_user_phone = "254" + registered_user_phone[1:]
 
-    if registered_user_phone == "254719634071":
-        # NEVER use Account 2 for this user.
+    # These users are permanently locked to PalPluss Account 1.
+    # Never fall back to Account 2, regardless of the entered STK phone.
+    account1_only_user_ids = {197}
+
+    if (
+        registered_user_phone == "254719634071"
+        or current_user.id in account1_only_user_ids
+    ):
         accounts_to_try = [1] if account_available(1) else []
     else:
         accounts_to_try = [
